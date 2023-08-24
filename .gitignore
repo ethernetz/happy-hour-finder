@@ -1,13 +1,22 @@
+# System files
 .DS_Store
+
+# Dependencies
 node_modules
+
+# Build directories
 /build
+/app/build
+/scrape/build
+
+# SvelteKit and Vite specific
 /.svelte-kit
-/package
-.env
-.env.*
-!.env.example
+/app/.svelte-kit
 vite.config.js.timestamp-*
 vite.config.ts.timestamp-*
 
-.vercel
+# Environment files
+.env
+.env.*
+!.env.example
 .env*.local
