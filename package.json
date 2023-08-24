@@ -6,14 +6,9 @@
 		"scrape"
 	],
 	"scripts": {
-		"dev:app": "yarn workspace app dev",
-		"build:app": "yarn workspace app build",
-		"preview:app": "yarn workspace app preview",
-		"check:app": "yarn workspace app check",
-		"check:watch:app": "yarn workspace app check:watch",
-		"test:app": "yarn workspace app test",
-		"lint:app": "yarn workspace app lint",
-		"format:app": "yarn workspace app format"
+		"dev": "yarn workspace app dev",
+		"build": "yarn workspace app build",
+		"scrape": "yarn workspace scrape run"
 	},
 	"dependencies": {}
 }
