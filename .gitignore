@@ -7,6 +7,7 @@ node_modules
 # Build directories
 /app/build
 /scrape/dist
+/scrape/website-text
 
 # SvelteKit and Vite specific
 /.svelte-kit
