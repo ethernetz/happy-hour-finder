@@ -2,6 +2,7 @@ import dotenv from 'dotenv';
 import { Level } from 'level';
 import OpenAI from 'openai';
 import path from 'path';
+import { ImageAnnotatorClient } from '@google-cloud/vision';
 
 dotenv.config({ path: '.env' });
 
@@ -13,3 +14,5 @@ export const openai = new OpenAI({
 
 const websiteTextPath = path.resolve(__dirname, '..', 'website-text'); // Go up one level to project root
 export const websiteTextDB = new Level(websiteTextPath, { valueEncoding: 'json' });
+
+export const imageAnnotatorClient = new ImageAnnotatorClient();

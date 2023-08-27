@@ -58,13 +58,13 @@ async function processUrls(urls: string[]) {
 		if (!websiteText) console.log('no website text found for', url);
 		if (!websiteText) continue;
 
-		console.log('making request for', url);
+		console.log('making gpt request for', url);
 		const response = await openai.chat.completions.create({
 			messages: [
 				{
 					role: 'user',
 					content: `
-					Your primary objective is to parse the following website text log the happy hour deal into the database using the logHappyHourDealIntoDatabase method.  
+					Your primary objective is to parse the following website text log the happy hour deal into the database using the logHappyHourDealIntoDatabase method.
 					If there is no mention of a happy hour or you're uncertain, do not log the happy hour into the database.
 
 					Important: Fabricating details is unacceptable. Only invoke 'logHappyHourDealIntoDatabase' if the website text explicitly mentions a happy hour.
