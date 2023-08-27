@@ -8,7 +8,7 @@
 	"scripts": {
 		"dev": "yarn workspace app dev",
 		"build": "yarn workspace app build",
-		"scrape": "yarn workspace scrape run"
+		"scrape": "yarn workspace scrape go"
 	},
 	"dependencies": {}
 }

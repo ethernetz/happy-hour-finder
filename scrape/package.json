@@ -2,10 +2,14 @@
 	"name": "scrape",
 	"version": "0.0.1",
 	"scripts": {
-		"run": "tsc && node dist/index.js"
+		"go": "tsc && node dist/index.js"
 	},
 	"dependencies": {
 		"dotenv": "^16.3.1",
-		"openai": "^4.2.0"
+		"js-tiktoken": "^1.0.7",
+		"level": "^8.0.0",
+		"openai": "^4.2.0",
+		"puppeteer": "^21.1.0",
+		"url": "^0.11.1"
 	}
 }
