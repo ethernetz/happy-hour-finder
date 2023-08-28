@@ -6,12 +6,18 @@ const IMG_EXTENSIONS = ['jpg', 'jpeg', 'png', 'pdf'];
 export async function collectTextFromDomain(mainUrl: URL): Promise<string> {
 	const browser = await puppeteer.launch({ headless: false, args: ['--enable-logging'] });
 	const visitedLinks = new Set<string>();
-	let happyHourLinkImagesText = '';
-	let happyHourLinkText = '';
-	let happyHourText = '';
-	let specialsText = '';
+	const happyHourLinkImagesText: string[] = [];
+	const happyHourLinkText: string[] = [];
+	const happyHourText: string[] = [];
+	const specialsText: string[] = [];
 
-	async function navigateAndCollectText(url: URL, innerMainUrl: URL = mainUrl) {
+	async function navigateAndCollectText(
+		currentLevel: number,
+		url: URL,
+		innerMainUrl: URL = mainUrl,
+	) {
+		if (currentLevel > 2) return;
+
 		if (visitedLinks.has(url.href)) {
 			return;
 		}
@@ -24,8 +30,7 @@ export async function collectTextFromDomain(mainUrl: URL): Promise<string> {
 			const [result] = await imageAnnotatorClient.documentTextDetection(url.href);
 
 			if (result.fullTextAnnotation?.text) {
-				happyHourLinkImagesText =
-					`FROM ${url.href}:\n${result.fullTextAnnotation.text}\n` + happyHourLinkImagesText;
+				happyHourLinkImagesText.push(`FROM ${url.href}:\n${result.fullTextAnnotation.text}`);
 			}
 			return;
 		}
@@ -47,23 +52,22 @@ export async function collectTextFromDomain(mainUrl: URL): Promise<string> {
 				await page.goto(url.href, { waitUntil: 'networkidle0', timeout: 20000 });
 				// eslint-disable-next-line @typescript-eslint/no-explicit-any
 			} catch (error: any) {
-				console.log('here');
 				if (error.name !== 'TimeoutError') throw error;
 			}
 
 			const text = await page.evaluate(() => document.body.innerText);
 			if (!text) {
 				const frameSources = await getFrameAndIframeSources(page);
-				await navigateAndCollectText(frameSources[0], frameSources[0]);
+				await navigateAndCollectText(currentLevel + 1, frameSources[0], frameSources[0]);
 			}
 
 			if (isHappyHourInUrl) {
 				imageHrefs = await getPageImages(page);
-				happyHourLinkText += `FROM ${url.href}:\n${text}\n`;
+				happyHourLinkText.push(`FROM ${url.href}:\n${text}`);
 			} else if (text.toLowerCase().includes('happy hour')) {
-				happyHourText += `FROM ${url.href}:\n${text}\n`;
+				happyHourText.push(`FROM ${url.href}:\n${text}`);
 			} else if (text.toLowerCase().includes('specials')) {
-				specialsText += `FROM ${url.href}:\n${text}\n`;
+				specialsText.push(`FROM ${url.href}:\n${text}`);
 			}
 
 			const internalLinks = (await getPageLinks(page, url)).filter(
@@ -71,7 +75,9 @@ export async function collectTextFromDomain(mainUrl: URL): Promise<string> {
 			);
 			await page.close();
 			await Promise.all(
-				[...internalLinks, ...imageHrefs].map((link) => navigateAndCollectText(link, innerMainUrl)),
+				[...internalLinks, ...imageHrefs].map((link) =>
+					navigateAndCollectText(currentLevel + 1, link, innerMainUrl),
+				),
 			);
 		} catch (error) {
 			console.error(`Failed to process ${url.href}: ${error}`);
@@ -79,14 +85,14 @@ export async function collectTextFromDomain(mainUrl: URL): Promise<string> {
 		}
 	}
 
-	await navigateAndCollectText(mainUrl);
+	await navigateAndCollectText(0, mainUrl);
 	await browser.close();
 
 	return `
-	${happyHourLinkImagesText}
-	${happyHourLinkText}
-	${happyHourText}
-	${specialsText}
+	${happyHourLinkImagesText.join('\n')}
+	${happyHourLinkText.join('\n')}
+	${happyHourText.join('\n')}
+	${specialsText.join('\n')}
 	`;
 }
 

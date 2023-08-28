@@ -29,7 +29,9 @@ const urls = [
 	// 'http://www.tenbellsnyc.com/',
 	// 'http://www.blackcrescentnyc.com/',
 	// 'https://www.foolsgoldnyc.com/',
-	'https://169barnyc.com/',
+	// 'https://169barnyc.com/',
+	// 'https://luckyjacksnyc.com/',
+	'https://nursebettie.com/',
 ];
 
 const functions: OpenAI.Chat.Completions.CompletionCreateParams.Function[] = [
@@ -105,6 +107,7 @@ async function promptGPT(websiteText: string) {
 					${truncate(websiteText)}
 
 					Remember: Fabricating details is unacceptable. Only invoke 'logHappyHourDealIntoDatabase' if the website text explicitly mentions a happy hour.
+					It is critical that you know the correct hours of the happy hour if you are going to log it into the database.
 					If hours of the happy hour are known, but the deal is not, still log the hours into the database.
 					`,
 			},
