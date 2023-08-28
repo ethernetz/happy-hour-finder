@@ -16,14 +16,16 @@ const urls = [
 	// 'https://www.tendegreesbar.com/',
 	// 'https://www.goodnightsonnynyc.com/',
 	// 'https://www.misterparadisenyc.com/',
-	// 'https://a10kitchen.com/',
+	// 'https://www.a10kitchen.com/',
 	// 'https://www.tilebarnyc.com/',
 	// 'https://www.thecopperstillnyc.com/',
 	// 'https://the-scratcher.business.site/',
 	// 'https://www.downtownsocialnyc.com/',
 	// 'https://www.bonnievee.com/',
 	// 'http://yucabarnyc.com/',
-	'https://www.loreleynyc.com/?y_source=1_Mjc2MDI0NTctNzE1LWxvY2F0aW9uLndlYnNpdGU%3D',
+	// 'https://www.loreleynyc.com/',
+	// 'https://www.99centsfreshpizzanyc.com/',
+	'https://www.verlainenyc.com/',
 ];
 
 const functions: OpenAI.Chat.Completions.CompletionCreateParams.Function[] = [
@@ -71,7 +73,7 @@ const functions: OpenAI.Chat.Completions.CompletionCreateParams.Function[] = [
 
 async function processUrls(urls: string[]) {
 	for (const url of urls) {
-		// await websiteTextDB.del(url);
+		await websiteTextDB.del(url);
 		let websiteText: string | undefined;
 		try {
 			websiteText = await websiteTextDB.get(url);
@@ -116,6 +118,8 @@ async function processUrls(urls: string[]) {
 					Below is the text data extracted from the website:
 
 					${truncate(websiteText)}
+
+					Remember: Fabricating details is unacceptable. Only invoke 'logHappyHourDealIntoDatabase' if the website text explicitly mentions a happy hour.
 					`,
 				},
 			],
