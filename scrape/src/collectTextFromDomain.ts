@@ -1,7 +1,7 @@
 import puppeteer, { Page } from 'puppeteer';
 import { imageAnnotatorClient } from './config';
 const NON_TEXTUAL_EXTENSIONS = ['svg', 'jpg', 'png', 'gif', 'pdf'];
-const IMG_EXTENSIONS = ['jpg', 'jpeg', 'png'];
+const IMG_EXTENSIONS = ['jpg', 'jpeg', 'png', 'pdf'];
 
 export async function collectTextFromDomain(mainUrl: URL): Promise<string> {
 	const browser = await puppeteer.launch({ headless: false, args: ['--enable-logging'] });
@@ -11,7 +11,7 @@ export async function collectTextFromDomain(mainUrl: URL): Promise<string> {
 	let happyHourText = '';
 	let specialsText = '';
 
-	async function navigateAndCollectText(url: URL) {
+	async function navigateAndCollectText(url: URL, innerMainUrl: URL = mainUrl) {
 		if (visitedLinks.has(url.href)) {
 			return;
 		}
@@ -43,8 +43,19 @@ export async function collectTextFromDomain(mainUrl: URL): Promise<string> {
 		let imageHrefs: URL[] = [];
 
 		try {
-			await page.goto(url.href, { waitUntil: 'networkidle0' });
+			try {
+				await page.goto(url.href, { waitUntil: 'networkidle0', timeout: 20000 });
+				// eslint-disable-next-line @typescript-eslint/no-explicit-any
+			} catch (error: any) {
+				console.log('here');
+				if (error.name !== 'TimeoutError') throw error;
+			}
+
 			const text = await page.evaluate(() => document.body.innerText);
+			if (!text) {
+				const frameSources = await getFrameAndIframeSources(page);
+				await navigateAndCollectText(frameSources[0], frameSources[0]);
+			}
 
 			if (isHappyHourInUrl) {
 				imageHrefs = await getPageImages(page);
@@ -59,7 +70,9 @@ export async function collectTextFromDomain(mainUrl: URL): Promise<string> {
 				(link) => link.hostname === mainUrl.hostname,
 			);
 			await page.close();
-			await Promise.all([...internalLinks, ...imageHrefs].map(navigateAndCollectText));
+			await Promise.all(
+				[...internalLinks, ...imageHrefs].map((link) => navigateAndCollectText(link, innerMainUrl)),
+			);
 		} catch (error) {
 			console.error(`Failed to process ${url.href}: ${error}`);
 			await page.close();
@@ -124,4 +137,12 @@ async function getPageImages(page: Page): Promise<URL[]> {
 			}),
 	);
 	return [...new Set(imageHrefs)].map((link) => new URL(link));
+}
+
+async function getFrameAndIframeSources(page: Page): Promise<URL[]> {
+	const sources = await page.$$eval('frame, iframe', (elements) =>
+		elements.map((el) => el.src).filter((src) => src),
+	);
+
+	return [...new Set(sources)].map((source) => new URL(source));
 }
