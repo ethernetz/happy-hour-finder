@@ -5,12 +5,25 @@ import { truncate } from './truncate';
 import { collectTextFromDomain } from './collectTextFromDomain';
 
 const urls = [
-	'https://www.phebesnyc.com/',
-	'https://www.ordercacioevino.com/',
-	'https://www.coopersnyc.com/',
-	'https://www.whiteoakny.com/',
-	'https://www.thegraymarenyc.com/',
-	'https://www.sweetandvicious.com/',
+	// 'https://www.phebesnyc.com/',
+	// 'https://www.ordercacioevino.com/',
+	// 'https://www.coopersnyc.com/',
+	// 'https://www.whiteoakny.com/',
+	// 'https://www.thegraymarenyc.com/',
+	// 'https://www.sweetandvicious.com/',
+	// 'http://www.buabar.com/',
+	// 'https://www.upstatenyc.com/',
+	// 'https://www.tendegreesbar.com/',
+	// 'https://www.goodnightsonnynyc.com/',
+	// 'https://www.misterparadisenyc.com/',
+	// 'https://a10kitchen.com/',
+	// 'https://www.tilebarnyc.com/',
+	// 'https://www.thecopperstillnyc.com/',
+	// 'https://the-scratcher.business.site/',
+	// 'https://www.downtownsocialnyc.com/',
+	// 'https://www.bonnievee.com/',
+	// 'http://yucabarnyc.com/',
+	'https://www.loreleynyc.com/?y_source=1_Mjc2MDI0NTctNzE1LWxvY2F0aW9uLndlYnNpdGU%3D',
 ];
 
 const functions: OpenAI.Chat.Completions.CompletionCreateParams.Function[] = [
@@ -19,7 +32,21 @@ const functions: OpenAI.Chat.Completions.CompletionCreateParams.Function[] = [
 		description: `
 			Logs an array of happy hour deals into the database. 
 			Each object in the array represents a specific day with its corresponding start time, end time, and deals. 
-			The "day" must be a lowercase string (e.g., "monday"), the "startTime" and "endTime" must be in 24-hour format (e.g., "16:00"), and the "deal" is a description of the happy hour special (e.g., "50% off drinks").`,
+			The "day" must be a lowercase string (e.g., "monday"), the "startTime" and "endTime" must be in 24-hour format (e.g., "16:00").
+			The "deal" is a description of the happy hour special
+			Examples for how a "deal" should look like:
+			- "$5 beers, $6 wines, $7 cocktails",
+			- "$7 draft selections, $10 house spirits, $11 select wines",
+			- "$9 cocktails, $7 beers, $9 wines",
+			- "$6 draft beers, $10 classic cocktails, $8 wines, $6 appetizers",
+			- "Deals on frozen margaritas, classic cocktails, beer, and food",
+			- "$11 cocktails, $2 off draft beer, 18$ carafes of house wine, $9 well",
+			- "Unknown",
+			- "Two for one drinks",
+			- "A dozen oysters for $18, $12 cocktails, $5 bottles & cans, $6 all draft pints, $12 wine", 
+			- "$8 wings, $5 mac n' cheese, $20 margarita pitchers, and more",
+			- "$5 drinks",
+			`,
 		parameters: {
 			type: 'object',
 			properties: {
@@ -33,7 +60,7 @@ const functions: OpenAI.Chat.Completions.CompletionCreateParams.Function[] = [
 							endTime: { type: 'string' },
 							deal: { type: 'string' },
 						},
-						required: ['day', 'startTime', 'endTime', 'deal'],
+						required: ['day', 'startTime', 'endTime'],
 					},
 				},
 			},
@@ -44,6 +71,7 @@ const functions: OpenAI.Chat.Completions.CompletionCreateParams.Function[] = [
 
 async function processUrls(urls: string[]) {
 	for (const url of urls) {
+		// await websiteTextDB.del(url);
 		let websiteText: string | undefined;
 		try {
 			websiteText = await websiteTextDB.get(url);
@@ -58,6 +86,8 @@ async function processUrls(urls: string[]) {
 		if (!websiteText) console.log('no website text found for', url);
 		if (!websiteText) continue;
 
+		// console.log(websiteText);
+
 		console.log('making gpt request for', url);
 		const response = await openai.chat.completions.create({
 			messages: [
@@ -65,9 +95,23 @@ async function processUrls(urls: string[]) {
 					role: 'user',
 					content: `
 					Your primary objective is to parse the following website text log the happy hour deal into the database using the logHappyHourDealIntoDatabase method.
+					Do not describe the action; perform it.
 					If there is no mention of a happy hour or you're uncertain, do not log the happy hour into the database.
 
 					Important: Fabricating details is unacceptable. Only invoke 'logHappyHourDealIntoDatabase' if the website text explicitly mentions a happy hour.
+
+					Examples for how a "deal" should look like:
+					- "$5 beers, $6 wines, $7 cocktails",
+					- "$7 draft selections, $10 house spirits, $11 select wines",
+					- "$9 cocktails, $7 beers, $9 wines",
+					- "$6 draft beers, $10 classic cocktails, $8 wines, $6 appetizers",
+					- "Deals on frozen margaritas, classic cocktails, beer, and food",
+					- "$11 cocktails, $2 off draft beer, 18$ carafes of house wine, $9 well",
+					- "Unknown",
+					- "Two for one drinks",
+					- "A dozen oysters for $18, $12 cocktails, $5 bottles & cans, $6 all draft pints, $12 wine", 
+					- "$8 wings, $5 mac n' cheese, $20 margarita pitchers, and more",
+					- "$5 drinks",
 
 					Below is the text data extracted from the website:
 

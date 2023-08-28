@@ -6,7 +6,10 @@ export async function collectTextFromDomain(mainUrl: URL): Promise<string> {
 	const browser = await puppeteer.launch({ headless: false, args: ['--enable-logging'] });
 	const visitedInternalLinks = new Set<string>();
 	const visitedImageHrefs = new Set<string>();
-	let allText = '';
+	let happyHourLinkImagesText = '';
+	let happyHourLinkText = '';
+	let happyHourText = '';
+	let specialsText = '';
 
 	function isTextualContent(url: URL): boolean {
 		const extension = url.pathname.split('.').pop();
@@ -71,7 +74,8 @@ export async function collectTextFromDomain(mainUrl: URL): Promise<string> {
 		const [result] = await imageAnnotatorClient.documentTextDetection(href);
 
 		if (result.fullTextAnnotation?.text) {
-			allText = `FROM ${href}:\n${result.fullTextAnnotation.text}\n` + allText;
+			happyHourLinkImagesText =
+				`FROM ${href}:\n${result.fullTextAnnotation.text}\n` + happyHourLinkImagesText;
 		}
 	}
 
@@ -98,12 +102,13 @@ export async function collectTextFromDomain(mainUrl: URL): Promise<string> {
 			await page.goto(url.href, { waitUntil: 'networkidle0' });
 			const text = await page.evaluate(() => document.body.innerText);
 
-			// Handle Happy Hour links and text
 			if (isHappyHourInUrl) {
 				imageHrefs = await fetchImageHrefs(page);
-				allText = `FROM ${url.href}:\n${text}\n` + allText;
+				happyHourLinkText += `FROM ${url.href}:\n${text}\n`;
 			} else if (text.toLowerCase().includes('happy hour')) {
-				allText += `FROM ${url.href}:\n${text}\n`;
+				happyHourText += `FROM ${url.href}:\n${text}\n`;
+			} else if (text.toLowerCase().includes('specials')) {
+				specialsText += `FROM ${url.href}:\n${text}\n`;
 			}
 
 			const internalLinks = await fetchInternalLinks(page, url);
@@ -121,5 +126,10 @@ export async function collectTextFromDomain(mainUrl: URL): Promise<string> {
 	await navigateAndCollect(mainUrl);
 	await browser.close();
 
-	return allText;
+	return `
+	${happyHourLinkImagesText}
+	${happyHourLinkText}
+	${happyHourText}
+	${specialsText}
+	`;
 }
