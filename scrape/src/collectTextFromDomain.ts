@@ -1,5 +1,6 @@
 import puppeteer, { Page } from 'puppeteer';
-import { imageAnnotatorClient } from './config';
+import { imageAnnotatorClient } from './config.js';
+import PQueue from 'p-queue';
 const NON_TEXTUAL_EXTENSIONS = ['svg', 'jpg', 'png', 'gif', 'pdf'];
 const IMG_EXTENSIONS = ['jpg', 'jpeg', 'png', 'pdf'];
 
@@ -10,13 +11,14 @@ export async function collectTextFromDomain(mainUrl: URL): Promise<string> {
 	const happyHourLinkText: string[] = [];
 	const happyHourText: string[] = [];
 	const specialsText: string[] = [];
+	const navigationQueue = new PQueue({ concurrency: 3 });
 
 	async function navigateAndCollectText(
-		currentLevel: number,
+		recursiveNavigationDepth: number,
 		url: URL,
 		innerMainUrl: URL = mainUrl,
 	) {
-		if (currentLevel > 2) return;
+		if (recursiveNavigationDepth > 3) return;
 
 		if (visitedLinks.has(url.href)) {
 			return;
@@ -39,6 +41,8 @@ export async function collectTextFromDomain(mainUrl: URL): Promise<string> {
 
 		visitedLinks.add(url.href);
 
+		console.log('visiting', url.href);
+
 		const isHappyHourInUrl = url.href
 			.replace(/[^a-zA-Z0-9]/g, '')
 			.toLowerCase()
@@ -58,7 +62,9 @@ export async function collectTextFromDomain(mainUrl: URL): Promise<string> {
 			const text = await page.evaluate(() => document.body.innerText);
 			if (!text) {
 				const frameSources = await getFrameAndIframeSources(page);
-				await navigateAndCollectText(currentLevel + 1, frameSources[0], frameSources[0]);
+				navigationQueue.add(() =>
+					navigateAndCollectText(recursiveNavigationDepth + 1, frameSources[0], frameSources[0]),
+				);
 			}
 
 			if (isHappyHourInUrl) {
@@ -73,19 +79,22 @@ export async function collectTextFromDomain(mainUrl: URL): Promise<string> {
 			const internalLinks = (await getPageLinks(page, url)).filter(
 				(link) => link.hostname === mainUrl.hostname,
 			);
-			await page.close();
-			await Promise.all(
-				[...internalLinks, ...imageHrefs].map((link) =>
-					navigateAndCollectText(currentLevel + 1, link, innerMainUrl),
-				),
-			);
+			[...internalLinks, ...imageHrefs].forEach((link) => {
+				navigationQueue
+					.add(() => navigateAndCollectText(recursiveNavigationDepth + 1, link, innerMainUrl))
+					.catch((error) => {
+						console.error(`Failed to process ${link.href}: ${error}`);
+					});
+			});
+			page.close();
 		} catch (error) {
 			console.error(`Failed to process ${url.href}: ${error}`);
 			await page.close();
 		}
 	}
 
-	await navigateAndCollectText(0, mainUrl);
+	navigationQueue.add(() => navigateAndCollectText(0, mainUrl));
+	await navigationQueue.onIdle();
 	await browser.close();
 
 	return `

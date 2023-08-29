@@ -7,7 +7,7 @@ export const truncate = (inputString: string) => {
 	const tokens = encoder.encode(inputString);
 
 	// Step 3: Truncate the token list if it's too long
-	const truncatedTokens = tokens.length > 4000 ? tokens.slice(0, 3700) : tokens;
+	const truncatedTokens = tokens.length > 3700 ? tokens.slice(0, 3700) : tokens;
 
 	// Step 4: Decode the truncated token list back into a string
 	const truncatedString = encoder.decode(truncatedTokens);

@@ -1,8 +1,8 @@
 import { URL } from 'url';
 import OpenAI from 'openai';
-import { openai, websiteTextDB } from './config';
-import { truncate } from './truncate';
-import { collectTextFromDomain } from './collectTextFromDomain';
+import { openai, websiteTextDB } from './config.js';
+import { truncate } from './truncate.js';
+import { collectTextFromDomain } from './collectTextFromDomain.js';
 
 const urls = [
 	// 'https://www.phebesnyc.com/',
@@ -31,7 +31,14 @@ const urls = [
 	// 'https://www.foolsgoldnyc.com/',
 	// 'https://169barnyc.com/',
 	// 'https://luckyjacksnyc.com/',
-	'https://nursebettie.com/',
+	// 'https://nursebettie.com/',
+	// 'https://www.82stanton.com/',
+	// 'https://www.theskinny-nyc.com/', // specials should not be happy hour
+	// 'https://www.greyladynyc.com/',
+	// 'http://jadisnyc.com/', # doesn't recognize happy hour from photo
+	// 'https://excusemyfrench-nyc.com/',
+	// 'https://www.themagicianbar.com/',
+	'https://www.set-hospitality.com/',
 ];
 
 const functions: OpenAI.Chat.Completions.CompletionCreateParams.Function[] = [
@@ -41,12 +48,11 @@ const functions: OpenAI.Chat.Completions.CompletionCreateParams.Function[] = [
 			Logs an array of happy hour deals into the database. 
 			Each object in the array represents a specific day with its corresponding start time, end time, and deals. 
 			The "day" must be one of the following lowercase strings: "monday", "tuesday", "wednesday", "thursday", "friday", "saturday", "sunday". 
-			The "startTime" and "endTime" must be in 24-hour format (e.g., "16:00"). 
+			The "startTime" and "endTime" must be in 24-hour format (e.g., 4pm is "16:00", 8:30pm is "20:30").
 			The "deal" is a description of the happy hour special
 			Examples for how a "deal" should look like:
 			- "$5 beers, $6 wines, $7 cocktails",
 			- "$7 draft selections, $10 house spirits, $11 select wines",
-			- "$9 cocktails, $7 beers, $9 wines",
 			- "Deals on frozen margaritas, classic cocktails, beer, and food",
 			- "$11 cocktails, $2 off draft beer, 18$ carafes of house wine, $9 well",
 			- "Unknown",
@@ -78,6 +84,8 @@ const functions: OpenAI.Chat.Completions.CompletionCreateParams.Function[] = [
 ];
 
 async function promptGPT(websiteText: string) {
+	const truncatedWebsiteText = truncate(websiteText);
+	console.log(truncatedWebsiteText);
 	return await openai.chat.completions.create({
 		messages: [
 			{
@@ -89,11 +97,14 @@ async function promptGPT(websiteText: string) {
 
 					Important: Fabricating details is unacceptable. Only invoke 'logHappyHourDealIntoDatabase' if the website text explicitly mentions a happy hour.
 
+					Information about the logHappyHourDealIntoDatabase method:
+					Each object in the array represents a specific day with its corresponding start time, end time, and deals. 
+					The "day" must be one of the following lowercase strings: "monday", "tuesday", "wednesday", "thursday", "friday", "saturday", "sunday". 
+					The "startTime" and "endTime" must be in 24-hour format (e.g., 4pm is "16:00", 8:30pm is "20:30").
+					The "deal" is a description of the happy hour special
 					Examples for how a "deal" should look like:
 					- "$5 beers, $6 wines, $7 cocktails",
 					- "$7 draft selections, $10 house spirits, $11 select wines",
-					- "$9 cocktails, $7 beers, $9 wines",
-					- "$6 draft beers, $10 classic cocktails, $8 wines, $6 appetizers",
 					- "Deals on frozen margaritas, classic cocktails, beer, and food",
 					- "$11 cocktails, $2 off draft beer, 18$ carafes of house wine, $9 well",
 					- "Unknown",
@@ -104,7 +115,7 @@ async function promptGPT(websiteText: string) {
 
 					Below is the text data extracted from the website:
 
-					${truncate(websiteText)}
+					${truncatedWebsiteText}
 
 					Remember: Fabricating details is unacceptable. Only invoke 'logHappyHourDealIntoDatabase' if the website text explicitly mentions a happy hour.
 					It is critical that you know the correct hours of the happy hour if you are going to log it into the database.
@@ -119,7 +130,7 @@ async function promptGPT(websiteText: string) {
 
 async function processUrls(urls: string[]) {
 	for (const url of urls) {
-		// await websiteTextDB.del(url);
+		await websiteTextDB.del(url);
 		let websiteText: string | undefined;
 		try {
 			websiteText = await websiteTextDB.get(url);
@@ -131,10 +142,9 @@ async function processUrls(urls: string[]) {
 			}
 		}
 
-		if (!websiteText) console.log('no website text found for', url);
-		if (!websiteText) continue;
-
-		console.log(websiteText);
+		if (!websiteText || !/[a-zA-Z0-9]/.test(websiteText))
+			console.log('no website text found for', url);
+		if (!websiteText || !/[a-zA-Z0-9]/.test(websiteText)) continue;
 
 		console.log('making gpt request for', url);
 		const response = await promptGPT(websiteText);
