@@ -1,14 +1,18 @@
 import puppeteer, { Page } from 'puppeteer';
-import { imageAnnotatorClient } from './config.js';
+import { imageAnnotatorClient, storage } from './config.js';
+import fs from 'fs/promises';
+import axios from 'axios';
+
 import PQueue from 'p-queue';
-const NON_TEXTUAL_EXTENSIONS = ['svg', 'jpg', 'png', 'gif', 'pdf'];
-const IMG_EXTENSIONS = ['jpg', 'jpeg', 'png', 'pdf'];
+const IMG_EXTENSIONS = ['jpg', 'jpeg', 'png'];
+const NON_TEXTUAL_EXTENSIONS = ['svg', 'jpg', 'png', 'gif', 'pdf', 'css'];
 
 export async function collectTextFromDomain(mainUrl: URL): Promise<string> {
 	const browser = await puppeteer.launch({ headless: false, args: ['--enable-logging'] });
 	const visitedLinks = new Set<string>();
 	const happyHourLinkImagesText: string[] = [];
 	const happyHourLinkText: string[] = [];
+	const happyHourPdfText: string[] = [];
 	const happyHourText: string[] = [];
 	const specialsText: string[] = [];
 	const navigationQueue = new PQueue({ concurrency: 3 });
@@ -18,38 +22,37 @@ export async function collectTextFromDomain(mainUrl: URL): Promise<string> {
 		url: URL,
 		innerMainUrl: URL = mainUrl,
 	) {
+		if (url == undefined) return;
+		if (visitedLinks.has(url.href)) return;
 		if (recursiveNavigationDepth > 3) return;
+		visitedLinks.add(url.href);
 
-		if (visitedLinks.has(url.href)) {
-			return;
-		}
-
-		const extension = url.pathname.split('.').pop();
+		const extension = url.pathname.split('.').pop()?.toLocaleLowerCase();
 
 		if (extension && IMG_EXTENSIONS.includes(extension)) {
-			visitedLinks.add(url.href);
 			console.log('making image request for', url.href);
 			const [result] = await imageAnnotatorClient.documentTextDetection(url.href);
 
 			if (result.fullTextAnnotation?.text) {
-				happyHourLinkImagesText.push(`FROM ${url.href}:\n${result.fullTextAnnotation.text}`);
+				happyHourLinkImagesText.push(`FROM ${url.href}:\n${result.fullTextAnnotation.text}\n`);
+			}
+			return;
+		}
+
+		if (extension === 'pdf') {
+			console.log('making pdf request for', url.href);
+			const text = await getTextFromPDF(url);
+			if (text && textIncludesHappyHour(text)) {
+				happyHourPdfText.push(`FROM ${url.href}:\n${text}\n`);
 			}
 			return;
 		}
 
 		if (extension && NON_TEXTUAL_EXTENSIONS.includes(extension)) return;
 
-		visitedLinks.add(url.href);
-
-		console.log('visiting', url.href);
-
-		const isHappyHourInUrl = url.href
-			.replace(/[^a-zA-Z0-9]/g, '')
-			.toLowerCase()
-			.includes('happyhour');
+		const isHappyHourInUrl = textIncludesHappyHour(url.href);
 
 		const page = await browser.newPage();
-		let imageHrefs: URL[] = [];
 
 		try {
 			try {
@@ -68,18 +71,28 @@ export async function collectTextFromDomain(mainUrl: URL): Promise<string> {
 			}
 
 			if (isHappyHourInUrl) {
-				imageHrefs = await getPageImages(page);
-				happyHourLinkText.push(`FROM ${url.href}:\n${text}`);
+				happyHourLinkText.push(`FROM ${url.href}:\n${text}\n`);
 			} else if (text.toLowerCase().includes('happy hour')) {
-				happyHourText.push(`FROM ${url.href}:\n${text}`);
+				happyHourText.push(`FROM ${url.href}:\n${text}\n`);
 			} else if (text.toLowerCase().includes('specials')) {
-				specialsText.push(`FROM ${url.href}:\n${text}`);
+				specialsText.push(`FROM ${url.href}:\n${text}\n`);
+			}
+
+			if (isHappyHourInUrl) {
+				const imageHrefs = await getPageImages(page);
+				imageHrefs.forEach((link) => {
+					navigationQueue
+						.add(() => navigateAndCollectText(recursiveNavigationDepth + 1, link, innerMainUrl))
+						.catch((error) => {
+							console.error(`Failed to process ${link.href}: ${error}`);
+						});
+				});
 			}
 
 			const internalLinks = (await getPageLinks(page, url)).filter(
 				(link) => link.hostname === mainUrl.hostname,
 			);
-			[...internalLinks, ...imageHrefs].forEach((link) => {
+			internalLinks.forEach((link) => {
 				navigationQueue
 					.add(() => navigateAndCollectText(recursiveNavigationDepth + 1, link, innerMainUrl))
 					.catch((error) => {
@@ -100,6 +113,7 @@ export async function collectTextFromDomain(mainUrl: URL): Promise<string> {
 	return `
 	${happyHourLinkImagesText.join('\n')}
 	${happyHourLinkText.join('\n')}
+	${happyHourPdfText.join('\n')}
 	${happyHourText.join('\n')}
 	${specialsText.join('\n')}
 	`;
@@ -160,4 +174,81 @@ async function getFrameAndIframeSources(page: Page): Promise<URL[]> {
 	);
 
 	return [...new Set(sources)].map((source) => new URL(source));
+}
+async function getTextFromPDF(url: URL): Promise<string | null> {
+	try {
+		const bucketName = 'hhf-restuarant-website-images';
+		const pathname = url.pathname.replace(/\//g, '_').substring(1);
+		const lastIndex = pathname.lastIndexOf('.pdf');
+		const pathnameWithoutExtension = lastIndex !== -1 ? pathname.substring(0, lastIndex) : pathname;
+
+		const folderName = url.hostname;
+		const imageDestination = `${folderName}/${pathname}`;
+		const jsonDestinationPrefix = `${folderName}/${pathnameWithoutExtension}`;
+		const bucket = storage.bucket(bucketName);
+
+		// Check if the JSON file already exists
+		const [files] = await bucket.getFiles({
+			prefix: jsonDestinationPrefix,
+		});
+		const jsonFile = files.find(
+			(file) => file.name.startsWith(jsonDestinationPrefix) && file.name.endsWith('.json'),
+		);
+
+		if (jsonFile) {
+			console.log('JSON file already exists');
+			const [jsonContents] = await jsonFile.download();
+			const parsedContents = JSON.parse(jsonContents.toString());
+			return parsedContents.responses[0]?.fullTextAnnotation?.text || null;
+		} else {
+			console.log('JSON file does not exist');
+			const downloadedPDFPath = `temp_${pathname}.pdf`;
+			try {
+				const response = await axios.get(url.href, { responseType: 'arraybuffer' });
+				await fs.writeFile(downloadedPDFPath, response.data);
+				await bucket.upload(downloadedPDFPath, {
+					destination: imageDestination,
+				});
+			} finally {
+				await fs.unlink(downloadedPDFPath);
+			}
+
+			const [operation] = await imageAnnotatorClient.asyncBatchAnnotateFiles({
+				requests: [
+					{
+						inputConfig: {
+							mimeType: 'application/pdf',
+							gcsSource: { uri: `gs://${bucketName}/${imageDestination}` },
+						},
+						features: [{ type: 'DOCUMENT_TEXT_DETECTION' }],
+						outputConfig: {
+							gcsDestination: { uri: `gs://${bucketName}/${jsonDestinationPrefix}` },
+							batchSize: 100,
+						},
+					},
+				],
+			});
+			await operation.promise();
+			const [filesAfter] = await bucket.getFiles({
+				prefix: jsonDestinationPrefix,
+			});
+			const newJsonFile = filesAfter.find(
+				(file) => file.name.startsWith(jsonDestinationPrefix) && file.name.endsWith('.json'),
+			);
+			if (!newJsonFile) throw new Error('JSON file not found');
+			const [jsonContents] = await newJsonFile.download();
+			const parsedContents = JSON.parse(jsonContents.toString());
+			return parsedContents.responses[0]?.fullTextAnnotation?.text || null;
+		}
+	} catch (error) {
+		console.error(`An error occurred: ${error}`);
+		return null;
+	}
+}
+
+export function textIncludesHappyHour(text: string): boolean {
+	return text
+		.replace(/[^a-zA-Z0-9]/g, '')
+		.toLowerCase()
+		.includes('happyhour');
 }

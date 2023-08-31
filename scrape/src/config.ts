@@ -2,6 +2,7 @@ import dotenv from 'dotenv';
 import { Level } from 'level';
 import OpenAI from 'openai';
 import { ImageAnnotatorClient } from '@google-cloud/vision';
+import { Storage } from '@google-cloud/storage';
 import { dirname, resolve } from 'path';
 import { fileURLToPath } from 'url';
 
@@ -19,3 +20,4 @@ const websiteTextPath = resolve(__dirname, '..', 'website-text'); // Go up one l
 export const websiteTextDB = new Level(websiteTextPath, { valueEncoding: 'json' });
 
 export const imageAnnotatorClient = new ImageAnnotatorClient();
+export const storage = new Storage();

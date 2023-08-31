@@ -35,10 +35,13 @@ const urls = [
 	// 'https://www.82stanton.com/',
 	// 'https://www.theskinny-nyc.com/', // specials should not be happy hour
 	// 'https://www.greyladynyc.com/',
-	// 'http://jadisnyc.com/', # doesn't recognize happy hour from photo
+	// 'http://jadisnyc.com/', // doesn't recognize happy hour from photo
 	// 'https://excusemyfrench-nyc.com/',
 	// 'https://www.themagicianbar.com/',
-	'https://www.set-hospitality.com/',
+	// 'https://www.set-hospitality.com/',
+	// 'https://fivedime.nyc/', //two different times??
+	// 'https://www.thecopperstillnyc.com/',
+	'https://www.thechelseabell.com/',
 ];
 
 const functions: OpenAI.Chat.Completions.CompletionCreateParams.Function[] = [
