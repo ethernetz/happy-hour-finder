@@ -1,6 +1,7 @@
 {
 	"name": "happy-hour-finder",
 	"private": true,
+	"license": "UNLICENSED",
 	"workspaces": [
 		"app",
 		"scrape"
