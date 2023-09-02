@@ -7,7 +7,7 @@ import PQueue from 'p-queue';
 const IMG_EXTENSIONS = ['jpg', 'jpeg', 'png'];
 const NON_TEXTUAL_EXTENSIONS = ['svg', 'jpg', 'png', 'gif', 'pdf', 'css'];
 
-export async function collectTextFromDomain(mainUrl: URL): Promise<string> {
+export async function scrapeTextFromDomain(mainUrl: URL): Promise<string> {
 	const browser = await puppeteer.launch({ headless: false, args: ['--enable-logging'] });
 	const visitedLinks = new Set<string>();
 	const happyHourLinkImagesText: string[] = [];
@@ -23,9 +23,10 @@ export async function collectTextFromDomain(mainUrl: URL): Promise<string> {
 		innerMainUrl: URL = mainUrl,
 	) {
 		if (url == undefined) return;
-		if (visitedLinks.has(url.href)) return;
+		if (visitedLinks.has(hrefWithoutProtocol(url.href))) return;
 		if (recursiveNavigationDepth > 3) return;
-		visitedLinks.add(url.href);
+		console.log('navigating to', url.href);
+		visitedLinks.add(hrefWithoutProtocol(url.href));
 
 		const extension = url.pathname.split('.').pop()?.toLocaleLowerCase();
 
@@ -33,7 +34,10 @@ export async function collectTextFromDomain(mainUrl: URL): Promise<string> {
 			console.log('making image request for', url.href);
 			const [result] = await imageAnnotatorClient.documentTextDetection(url.href);
 
-			if (result.fullTextAnnotation?.text) {
+			if (
+				result.fullTextAnnotation?.text &&
+				textIncludesTerm(result.fullTextAnnotation.text, 'happyhour')
+			) {
 				happyHourLinkImagesText.push(`FROM ${url.href}:\n${result.fullTextAnnotation.text}\n`);
 			}
 			return;
@@ -42,15 +46,13 @@ export async function collectTextFromDomain(mainUrl: URL): Promise<string> {
 		if (extension === 'pdf') {
 			console.log('making pdf request for', url.href);
 			const text = await getTextFromPDF(url);
-			if (text && textIncludesHappyHour(text)) {
+			if (text && textIncludesTerm(text, 'happyhour')) {
 				happyHourPdfText.push(`FROM ${url.href}:\n${text}\n`);
 			}
 			return;
 		}
 
 		if (extension && NON_TEXTUAL_EXTENSIONS.includes(extension)) return;
-
-		const isHappyHourInUrl = textIncludesHappyHour(url.href);
 
 		const page = await browser.newPage();
 
@@ -70,11 +72,13 @@ export async function collectTextFromDomain(mainUrl: URL): Promise<string> {
 				);
 			}
 
+			const isHappyHourInUrl = textIncludesTerm(url.href, 'happyhour');
+
 			if (isHappyHourInUrl) {
 				happyHourLinkText.push(`FROM ${url.href}:\n${text}\n`);
-			} else if (text.toLowerCase().includes('happy hour')) {
+			} else if (textIncludesTerm(text, 'happyhour')) {
 				happyHourText.push(`FROM ${url.href}:\n${text}\n`);
-			} else if (text.toLowerCase().includes('specials')) {
+			} else if (textIncludesTerm(text, 'special')) {
 				specialsText.push(`FROM ${url.href}:\n${text}\n`);
 			}
 
@@ -114,8 +118,19 @@ export async function collectTextFromDomain(mainUrl: URL): Promise<string> {
 	${happyHourLinkImagesText.join('\n')}
 	${happyHourLinkText.join('\n')}
 	${happyHourPdfText.join('\n')}
-	${happyHourText.join('\n')}
-	${specialsText.join('\n')}
+	${
+		!happyHourLinkImagesText.length && !happyHourLinkText.length && !happyHourPdfText.length
+			? happyHourText.join('\n')
+			: ''
+	}
+	${
+		!happyHourLinkImagesText.length &&
+		!happyHourLinkText.length &&
+		!happyHourPdfText.length &&
+		!happyHourText.length
+			? specialsText.join('\n')
+			: ''
+	}
 	`;
 }
 
@@ -246,9 +261,11 @@ async function getTextFromPDF(url: URL): Promise<string | null> {
 	}
 }
 
-export function textIncludesHappyHour(text: string): boolean {
+export function textIncludesTerm(text: string, term: string): boolean {
 	return text
 		.replace(/[^a-zA-Z0-9]/g, '')
 		.toLowerCase()
-		.includes('happyhour');
+		.includes(term);
 }
+
+export const hrefWithoutProtocol = (href: string) => href.substring(href.indexOf('://') + 3);
