@@ -6,8 +6,13 @@ import { Storage } from '@google-cloud/storage';
 import { dirname, resolve } from 'path';
 import { fileURLToPath } from 'url';
 import { MongoClient } from 'mongodb';
+import mbxGeocoding from '@mapbox/mapbox-sdk/services/geocoding.js';
 
 dotenv.config({ path: '.env.local' });
+
+export const MAPB0X_API_KEY = process.env.MAPB0X_API_KEY as string;
+if (!MAPB0X_API_KEY) throw new Error('MAPB0X_API_KEY is not defined');
+export const geocodingClient = mbxGeocoding({ accessToken: MAPB0X_API_KEY });
 
 export const MONGODB_URI = process.env.MONGODB_URI as string;
 if (!MONGODB_URI) throw new Error('MONGODB_URI is not defined');

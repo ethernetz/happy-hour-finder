@@ -1,5 +1,6 @@
 import puppeteer, { Browser, ElementHandle, Page, Target } from 'puppeteer';
 import { SpotFromYelp } from './types';
+import { geocodingClient } from './config.js';
 
 const BASE_URL =
 	'https://www.yelp.com/search?find_desc=Bars&find_loc=New+York%2C+NY+10001&l=p%3ANY%3ANew_York%3AManhattan%3AEast_Village&sortby=review_count';
@@ -18,7 +19,7 @@ async function fetchFilteredElements(page: Page): Promise<ElementHandle<Element>
 	return filteredElements;
 }
 
-async function fetchRestaurantDetails(newPage: Page): Promise<SpotFromYelp> {
+async function fetchSpotDetailsFromYelp(newPage: Page): Promise<SpotFromYelp> {
 	return newPage.evaluate(() => {
 		// Get the name
 		const nameElement = document.querySelector('[class^=" headingLight"]');
@@ -74,11 +75,10 @@ export async function scrapeSpotsFromYelp() {
 		});
 
 		const elements = await fetchFilteredElements(page);
-		const filteredHandles = elements.filter(Boolean);
 
-		console.log(`found ${filteredHandles.length} elements`);
+		console.log(`found ${elements.length} elements`);
 
-		for (const element of filteredHandles) {
+		for (const element of elements) {
 			const newPagePromise = new Promise<Page | null>((resolve) => {
 				browser?.once('targetcreated', async (target: Target) => {
 					resolve(await target.page());
@@ -97,8 +97,23 @@ export async function scrapeSpotsFromYelp() {
 					if (error.name !== 'TimeoutError') throw error;
 				});
 
-			const restaurant = await fetchRestaurantDetails(newPage);
-			console.log(restaurant);
+			const spotDetails = await fetchSpotDetailsFromYelp(newPage);
+			const response = await geocodingClient
+				.forwardGeocode({
+					query: spotDetails.address,
+					countries: ['us'],
+					types: ['address'],
+					limit: 1,
+				})
+				.send();
+			const [latitude, longitude] = response.body.features[0].geometry.coordinates;
+			console.log({
+				...spotDetails,
+				coordinates: {
+					type: 'Point',
+					coordinates: [longitude, latitude],
+				},
+			});
 
 			await new Promise((resolve) => setTimeout(resolve, WAIT_DURATION));
 			await newPage.close();

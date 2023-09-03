@@ -83,7 +83,6 @@ async function processUrls(urls: string[]) {
 // processUrls(urls);
 
 scrapeSpotsFromYelp();
-
 async function doMongoDBStuff() {
 	const mongoClient = await mongoClientPromise;
 	const db = mongoClient.db('happyHourDB');
