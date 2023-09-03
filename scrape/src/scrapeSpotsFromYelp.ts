@@ -122,9 +122,10 @@ export async function scrapeSpotsFromYelp() {
 				})
 				.send();
 			const [latitude, longitude] = response.body.features[0].geometry.coordinates;
-			const fullRestaurantInfo: Omit<Spot, 'happyHours' | '_id'> = {
+			const fullRestaurantInfo: Omit<Spot, '_id'> = {
 				...spotDetails,
 				uniqueName,
+				checkedForHappyHours: false,
 				coordinates: {
 					type: 'Point',
 					coordinates: [longitude, latitude],

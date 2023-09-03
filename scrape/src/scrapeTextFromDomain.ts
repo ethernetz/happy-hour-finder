@@ -15,6 +15,8 @@ export async function scrapeTextFromDomain(mainUrl: URL): Promise<string> {
 	const happyHourPdfText: string[] = [];
 	const happyHourText: string[] = [];
 	const specialsText: string[] = [];
+	let taskCount = 0;
+	const taskLimit = 25;
 	const navigationQueue = new PQueue({ concurrency: 3 });
 
 	async function navigateAndCollectText(
@@ -42,6 +44,8 @@ export async function scrapeTextFromDomain(mainUrl: URL): Promise<string> {
 			}
 			return;
 		}
+
+		taskCount++;
 
 		if (extension === 'pdf') {
 			console.log('making pdf request for', url.href);
@@ -86,7 +90,9 @@ export async function scrapeTextFromDomain(mainUrl: URL): Promise<string> {
 				const imageHrefs = await getPageImages(page);
 				imageHrefs.forEach((link) => {
 					navigationQueue
-						.add(() => navigateAndCollectText(recursiveNavigationDepth + 1, link, innerMainUrl))
+						.add(() => navigateAndCollectText(recursiveNavigationDepth + 1, link, innerMainUrl), {
+							priority: 30,
+						})
 						.catch((error) => {
 							console.error(`Failed to process ${link.href}: ${error}`);
 						});
@@ -97,8 +103,22 @@ export async function scrapeTextFromDomain(mainUrl: URL): Promise<string> {
 				(link) => link.hostname === mainUrl.hostname,
 			);
 			internalLinks.forEach((link) => {
+				let priority = 1;
+				if (link.origin === mainUrl.origin && link.pathname === mainUrl.pathname) {
+					priority += 10;
+				}
+
+				if (textIncludesTerm(link.href, 'happyhour')) {
+					priority += 5;
+				} else if (textIncludesTerm(link.href, 'special')) {
+					priority += 4;
+				} else if (textIncludesTerm(link.href, 'menu')) {
+					priority += 3;
+				}
 				navigationQueue
-					.add(() => navigateAndCollectText(recursiveNavigationDepth + 1, link, innerMainUrl))
+					.add(() => navigateAndCollectText(recursiveNavigationDepth + 1, link, innerMainUrl), {
+						priority,
+					})
 					.catch((error) => {
 						console.error(`Failed to process ${link.href}: ${error}`);
 					});
@@ -111,6 +131,12 @@ export async function scrapeTextFromDomain(mainUrl: URL): Promise<string> {
 	}
 
 	navigationQueue.add(() => navigateAndCollectText(0, mainUrl));
+	navigationQueue.on('completed', () => {
+		if (taskCount >= taskLimit) {
+			navigationQueue.pause();
+			navigationQueue.clear();
+		}
+	});
 	await navigationQueue.onIdle();
 	await browser.close();
 
