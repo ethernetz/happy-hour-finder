@@ -1,54 +1,11 @@
 import { scrapeSpotsFromYelp } from './scrapeSpotsFromYelp.js';
-import { scrapeMissingHappyHourInfo } from './scrapeMissingHappyHourInfo.js';
+scrapeSpotsFromYelp();
 
-const urls = [
-	// 'https://www.phebesnyc.com/',
-	// 'https://www.ordercacioevino.com/',
-	// 'https://www.coopersnyc.com/',
-	// 'https://www.whiteoakny.com/',
-	// 'https://www.thegraymarenyc.com/',
-	// 'https://www.sweetandvicious.com/',
-	// 'http://www.buabar.com/',
-	// 'https://www.upstatenyc.com/',
-	// 'https://www.tendegreesbar.com/',
-	// 'https://www.goodnightsonnynyc.com/',
-	// 'https://www.misterparadisenyc.com/',
-	// 'https://www.a10kitchen.com/',
-	// 'https://www.tilebarnyc.com/',
-	// 'https://www.thecopperstillnyc.com/',
-	// 'https://the-scratcher.business.site/',
-	// 'https://www.downtownsocialnyc.com/',
-	// 'https://www.bonnievee.com/',
-	// 'http://yucabarnyc.com/',
-	// 'https://www.loreleynyc.com/',
-	// 'https://www.99centsfreshpizzanyc.com/',
-	// 'https://www.verlainenyc.com/',
-	// 'http://www.tenbellsnyc.com/',
-	// 'http://www.blackcrescentnyc.com/',
-	// 'https://www.foolsgoldnyc.com/',
-	// 'https://169barnyc.com/',
-	// 'https://luckyjacksnyc.com/',
-	// 'https://nursebettie.com/',
-	// 'https://www.82stanton.com/',
-	// 'https://www.theskinny-nyc.com/', // specials should not be happy hour
-	// 'https://www.greyladynyc.com/',
-	// 'http://jadisnyc.com/', // doesn't recognize happy hour from photo
-	// 'https://excusemyfrench-nyc.com/',
-	// 'https://www.themagicianbar.com/',
-	// 'https://www.set-hospitality.com/',
-	// 'https://fivedime.nyc/', //two different times??
-	// 'https://www.thecopperstillnyc.com/',
-	// 'https://www.thechelseabell.com/',
-	// 'http://www.thetippler.com/',
-	// 'http://www.barbnyc.com/',
-	// 'https://www.porchlightbar.com/?utm_source=GoogleBusinessProfile&utm_medium=Website&utm_campaign=MapLabs', #Cant get the deal
-	// 'https://winebarveloce.com/',
-	// 'https://junglebirdnyc.com/',
-	// 'https://www.themermaidnyc.com/', // switches to subdomain
-	// 'https://www.districtlocalnyc.com/',
-	// 'http://www.cedricsattheshed.com/?utm_source=GoogleBusinessProfile&utm_medium=Website&utm_campaign=MapLabs',
-	'http://juniper2.wpengine.com/',
-];
+// import { scrapeMissingHappyHourInfo } from './scrapeMissingHappyHourInfo.js';
+// scrapeMissingHappyHourInfo();
 
-// scrapeSpotsFromYelp();
-scrapeMissingHappyHourInfo();
+// import { websiteTextDB } from './config.js';
+// websiteTextDB.get('http://www.thepennyfarthingnyc.com/').then((res) => console.log(res));
+
+// import { getHappyHourInfoFromUrl } from './getHappyHourInfoFromUrl.js';
+// getHappyHourInfoFromUrl('http://pineappleclub.com/', true).then((res) => console.log(res));

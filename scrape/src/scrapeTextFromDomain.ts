@@ -25,10 +25,10 @@ export async function scrapeTextFromDomain(mainUrl: URL): Promise<string> {
 		innerMainUrl: URL = mainUrl,
 	) {
 		if (url == undefined) return;
-		if (visitedLinks.has(hrefWithoutProtocol(url.href))) return;
+		if (visitedLinks.has(cleanURL(url.href))) return;
 		if (recursiveNavigationDepth > 3) return;
 		console.log('navigating to', url.href);
-		visitedLinks.add(hrefWithoutProtocol(url.href));
+		visitedLinks.add(cleanURL(url.href));
 
 		const extension = url.pathname.split('.').pop()?.toLocaleLowerCase();
 
@@ -294,4 +294,16 @@ export function textIncludesTerm(text: string, term: string): boolean {
 		.includes(term);
 }
 
-export const hrefWithoutProtocol = (href: string) => href.substring(href.indexOf('://') + 3);
+function cleanURL(inputURL: string): string {
+	// Step 1: Remove "http://" prefix if it exists
+	if (inputURL.startsWith('http://')) {
+		inputURL = inputURL.substring(7);
+	}
+
+	// Step 2: Remove trailing slash if it exists
+	if (inputURL.endsWith('/')) {
+		inputURL = inputURL.slice(0, -1);
+	}
+
+	return inputURL;
+}

@@ -3,12 +3,14 @@ import { parseTextWithGPT } from './parseTextWithGPT.js';
 import { scrapeTextFromDomain } from './scrapeTextFromDomain.js';
 import { HappyHour } from './types.js';
 
-export async function getHappyHourInfoFromUrl(url: string): Promise<HappyHour[] | null> {
-	// await websiteTextDB.del(url);
+export async function getHappyHourInfoFromUrl(
+	url: string,
+	deleteCurrentText?: boolean,
+): Promise<HappyHour[] | null> {
+	deleteCurrentText && (await websiteTextDB.del(url));
 	let websiteText: string | undefined;
 	try {
 		websiteText = await websiteTextDB.get(url);
-		console.log(websiteText);
 		// eslint-disable-next-line @typescript-eslint/no-explicit-any
 	} catch (err: any) {
 		if (err.code === 'LEVEL_NOT_FOUND') {
