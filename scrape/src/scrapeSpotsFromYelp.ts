@@ -1,12 +1,12 @@
 import puppeteer, { Browser, ElementHandle, Page, Target } from 'puppeteer';
-import { SpotFromYelp } from './types';
-import { geocodingClient } from './config.js';
+import { Spot, SpotFromYelp } from './types';
+import mongoClientPromise, { geocodingClient } from './config.js';
 
 const BASE_URL =
 	'https://www.yelp.com/search?find_desc=Bars&find_loc=New+York%2C+NY+10001&l=p%3ANY%3ANew_York%3AManhattan%3AEast_Village&sortby=review_count';
 const WAIT_DURATION = 3000;
 
-async function fetchFilteredElements(page: Page): Promise<ElementHandle<Element>[]> {
+async function fetchSpotCardsListPage(page: Page): Promise<ElementHandle<Element>[]> {
 	const elements = await page.$$('[class^=" businessName"]');
 	const possibleFilteredElements = await Promise.all(
 		elements.map(async (element) => {
@@ -19,7 +19,7 @@ async function fetchFilteredElements(page: Page): Promise<ElementHandle<Element>
 	return filteredElements;
 }
 
-async function fetchSpotDetailsFromYelp(newPage: Page): Promise<SpotFromYelp> {
+async function fetchSpotDetailsFromSpotPage(newPage: Page): Promise<SpotFromYelp> {
 	return newPage.evaluate(() => {
 		// Get the name
 		const nameElement = document.querySelector('[class^=" headingLight"]');
@@ -66,6 +66,12 @@ async function fetchSpotDetailsFromYelp(newPage: Page): Promise<SpotFromYelp> {
 }
 
 export async function scrapeSpotsFromYelp() {
+	const mongoClient = await mongoClientPromise;
+	const db = mongoClient.db('happyHourDB');
+	const collection = db.collection('spots');
+	await collection.createIndex({ uniqueName: 1 }, { unique: true });
+	await collection.createIndex({ coordinates: '2dsphere' });
+
 	let browser: Browser | undefined;
 	try {
 		browser = await puppeteer.launch({ headless: false, args: ['--enable-logging'] });
@@ -74,11 +80,20 @@ export async function scrapeSpotsFromYelp() {
 			if (error.name !== 'TimeoutError') throw error;
 		});
 
-		const elements = await fetchFilteredElements(page);
+		const spotCards = await fetchSpotCardsListPage(page);
 
-		console.log(`found ${elements.length} elements`);
+		for (const element of spotCards) {
+			const restaurantName = await element.evaluate((el) =>
+				(el as HTMLElement).innerText.replace(/^\d+\.\s/, ''),
+			);
+			const uniqueName = `${restaurantName}_eastvilliage`;
+			const existingSpot = await collection.findOne({ uniqueName });
+			if (existingSpot) {
+				console.log(`skipping ${uniqueName}`);
+				continue;
+			}
+			console.log(`processing ${uniqueName}`);
 
-		for (const element of elements) {
 			const newPagePromise = new Promise<Page | null>((resolve) => {
 				browser?.once('targetcreated', async (target: Target) => {
 					resolve(await target.page());
@@ -97,7 +112,7 @@ export async function scrapeSpotsFromYelp() {
 					if (error.name !== 'TimeoutError') throw error;
 				});
 
-			const spotDetails = await fetchSpotDetailsFromYelp(newPage);
+			const spotDetails = await fetchSpotDetailsFromSpotPage(newPage);
 			const response = await geocodingClient
 				.forwardGeocode({
 					query: spotDetails.address,
@@ -107,13 +122,17 @@ export async function scrapeSpotsFromYelp() {
 				})
 				.send();
 			const [latitude, longitude] = response.body.features[0].geometry.coordinates;
-			console.log({
+			const fullRestaurantInfo: Omit<Spot, 'happyHours' | '_id'> = {
 				...spotDetails,
+				uniqueName,
 				coordinates: {
 					type: 'Point',
 					coordinates: [longitude, latitude],
 				},
-			});
+			};
+
+			console.log(fullRestaurantInfo);
+			await collection.insertOne(fullRestaurantInfo);
 
 			await new Promise((resolve) => setTimeout(resolve, WAIT_DURATION));
 			await newPage.close();

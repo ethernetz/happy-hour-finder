@@ -7,6 +7,7 @@ export interface SpotFromYelp {
 export interface Spot {
 	_id: string;
 	name: string;
+	uniqueName: string;
 	address: string;
 	url: string;
 	coordinates: GeoJSONPoint;

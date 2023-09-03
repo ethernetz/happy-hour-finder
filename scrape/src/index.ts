@@ -1,5 +1,5 @@
 import { URL } from 'url';
-import mongoClientPromise, { websiteTextDB } from './config.js';
+import { websiteTextDB } from './config.js';
 import { scrapeTextFromDomain } from './scrapeTextFromDomain.js';
 import { parseTextWithGPT } from './parseTextWithGPT.js';
 import { scrapeSpotsFromYelp } from './scrapeSpotsFromYelp.js';
@@ -83,10 +83,3 @@ async function processUrls(urls: string[]) {
 // processUrls(urls);
 
 scrapeSpotsFromYelp();
-async function doMongoDBStuff() {
-	const mongoClient = await mongoClientPromise;
-	const db = mongoClient.db('happyHourDB');
-	const collection = db.collection('spots');
-}
-
-// doMongoDBStuff();
