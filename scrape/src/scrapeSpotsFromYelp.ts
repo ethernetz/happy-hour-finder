@@ -46,10 +46,6 @@ async function fetchSpotDetailsFromSpotPage(newPage: Page): Promise<SpotFromYelp
 		const urlElement =
 			businessWebsiteElement?.parentElement?.querySelector<HTMLAnchorElement>('a[href]');
 		const yelpRedirectUrl = urlElement ? urlElement.href : null;
-		if (!yelpRedirectUrl) {
-			console.log('yelpRedirectUrl not found. Returning null.');
-			return null;
-		}
 		return {
 			name,
 			address,
@@ -77,14 +73,33 @@ export async function scrapeSpotsFromYelpPage(browser: Browser, page: Page): Pro
 
 			const yelpSpotPage = await navigateToSpotPage(browser, element);
 			const spotDetails = await fetchSpotDetailsFromSpotPage(yelpSpotPage);
+			yelpSpotPage.close();
 			if (!spotDetails) {
 				console.log('spotDetails not found. Skipping.');
-				yelpSpotPage.close();
 				continue;
 			}
 
-			const spotWebsiteUrl = await getSpotWebsiteUrl(browser, spotDetails.yelpRedirectUrl);
 			const [latitude, longitude] = await getCoordinates(spotDetails.address);
+
+			if (!spotDetails.yelpRedirectUrl) {
+				const fullSpotInfo: Spot = {
+					name: spotDetails.name,
+					address: spotDetails.address,
+					url: null,
+					uniqueName,
+					checkedForHappyHours: false,
+					coordinates: {
+						type: 'Point',
+						coordinates: [longitude, latitude],
+					},
+				};
+				console.log('spot ${uniqueName} has no url, inserting into mongo');
+				console.log(fullSpotInfo);
+				await collection.insertOne(fullSpotInfo);
+				continue;
+			}
+			const spotWebsiteUrl = await getSpotWebsiteUrl(browser, spotDetails.yelpRedirectUrl);
+
 			const happyHourInfo = await getHappyHourInfoFromUrl(spotWebsiteUrl);
 
 			const fullSpotInfo: Spot = {
@@ -136,11 +151,17 @@ async function navigateToSpotPage(browser: Browser, element: ElementHandle): Pro
 
 async function getSpotWebsiteUrl(browser: Browser, yelpRedirectUrl: string): Promise<string> {
 	const spotWebsitePage = await browser.newPage();
-	await spotWebsitePage.goto(yelpRedirectUrl, {
-		waitUntil: 'networkidle0',
-		timeout: 10000,
+	await spotWebsitePage
+		.goto(yelpRedirectUrl, {
+			waitUntil: 'networkidle0',
+			timeout: 10000,
+		})
+		.catch((error) => {
+			if (error.name !== 'TimeoutError') throw error;
+		});
+	await spotWebsitePage.waitForNetworkIdle({ idleTime: 2000, timeout: 7000 }).catch((error) => {
+		if (error.name !== 'TimeoutError') throw error;
 	});
-	await spotWebsitePage.waitForNetworkIdle({ idleTime: 2000, timeout: 5000 });
 	const spotWebsiteUrl = spotWebsitePage.url();
 	await spotWebsitePage.close();
 	return spotWebsiteUrl;

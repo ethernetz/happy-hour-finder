@@ -1,25 +1,32 @@
 export interface SpotFromYelp {
 	name: string;
 	address: string;
-	yelpRedirectUrl: string;
+	yelpRedirectUrl: string | null;
 }
 
-export type Spot = SpotWithHappyHours | SpotWithoutHappyHours;
+export type Spot = SpotWithHappyHours | SpotWithoutHappyHours | SpotWithoutUrl;
 
 export interface SpotWithHappyHours extends SpotBase {
 	checkedForHappyHours: true;
 	happyHours: HappyHour[] | null;
+	url: string;
 }
 
 export interface SpotWithoutHappyHours extends SpotBase {
 	checkedForHappyHours: false;
+	url: string;
+}
+
+export interface SpotWithoutUrl extends SpotBase {
+	checkedForHappyHours: false;
+	url: null;
 }
 
 export interface SpotBase {
 	name: string;
 	uniqueName: string;
 	address: string;
-	url: string;
+	url: string | null;
 	coordinates: GeoJSONPoint;
 	checkedForHappyHours: boolean;
 }

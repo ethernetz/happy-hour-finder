@@ -8,12 +8,17 @@ export async function scrapeMissingHappyHourInfo() {
 	const collection = db.collection<Spot>('spots');
 
 	const query = {
-		$or: [{ checkedForHappyHour: { $exists: false } }, { checkedForHappyHour: false }],
+		$and: [
+			{ url: { $exists: true, $ne: null } },
+			{
+				$or: [{ checkedForHappyHour: { $exists: false } }, { checkedForHappyHour: false }],
+			},
+		],
 	};
-
 	const cursor = collection.find(query);
 	for await (const doc of cursor) {
 		console.dir(doc);
+		if (!doc.url) throw new Error('doc.url is null');
 		const happyHourInfo = await getHappyHourInfoFromUrl(doc.url);
 		if (!happyHourInfo) {
 			console.log('no happy hour info found for', doc.url);
