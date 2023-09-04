@@ -5,7 +5,9 @@ scrapeSpotsFromYelp();
 // scrapeMissingHappyHourInfo();
 
 // import { websiteTextDB } from './config.js';
-// websiteTextDB.get('http://www.thepennyfarthingnyc.com/').then((res) => console.log(res));
+// websiteTextDB.get('https://www.pineappleclub.com/').then((res) => console.log(res));
 
 // import { getHappyHourInfoFromUrl } from './getHappyHourInfoFromUrl.js';
-// getHappyHourInfoFromUrl('http://pineappleclub.com/', true).then((res) => console.log(res));
+// getHappyHourInfoFromUrl('https://www.pineappleclub.com/happy-hour', true).then((res) =>
+// 	console.log(res),
+// );

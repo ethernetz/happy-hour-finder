@@ -18,7 +18,8 @@ export interface SpotWithoutHappyHours extends SpotBase {
 }
 
 export interface SpotWithoutUrl extends SpotBase {
-	checkedForHappyHours: false;
+	checkedForHappyHours: true;
+	happyHours: null;
 	url: null;
 }
 
@@ -36,6 +37,7 @@ export interface HappyHour {
 	startTime: string;
 	endTime: string;
 	deal: string;
+	crossesMidnight: boolean;
 }
 
 export interface GeoJSONPoint {

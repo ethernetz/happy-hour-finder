@@ -11,24 +11,23 @@ export async function scrapeMissingHappyHourInfo() {
 		$and: [
 			{ url: { $exists: true, $ne: null } },
 			{
-				$or: [{ checkedForHappyHour: { $exists: false } }, { checkedForHappyHour: false }],
+				$or: [{ checkedForHappyHours: { $exists: false } }, { checkedForHappyHours: false }],
 			},
 		],
 	};
 	const cursor = collection.find(query);
 	for await (const doc of cursor) {
-		console.dir(doc);
 		if (!doc.url) throw new Error('doc.url is null');
 		const happyHourInfo = await getHappyHourInfoFromUrl(doc.url);
 		if (!happyHourInfo) {
 			console.log('no happy hour info found for', doc.url);
-			collection.updateOne({ _id: doc._id }, { $set: { checkedForHappyHour: true } });
+			collection.updateOne({ _id: doc._id }, { $set: { checkedForHappyHours: true } });
 		} else {
 			console.log('happy hour info found for', doc.url);
 			console.log(happyHourInfo);
 			collection.updateOne(
 				{ _id: doc._id },
-				{ $set: { checkedForHappyHour: true, happyHours: happyHourInfo } },
+				{ $set: { checkedForHappyHours: true, happyHourInfo: happyHourInfo } },
 			);
 		}
 	}
