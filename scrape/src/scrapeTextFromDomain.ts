@@ -19,18 +19,14 @@ export async function scrapeTextFromDomain(mainUrl: URL): Promise<string> {
 	const taskLimit = 25;
 	const navigationQueue = new PQueue({ concurrency: 3 });
 
-	async function navigateAndCollectText(
-		recursiveNavigationDepth: number,
-		url: URL,
-		innerMainUrl: URL = mainUrl,
-	) {
+	async function navigateAndCollectText(recursiveNavigationDepth: number, url: URL) {
 		if (url == undefined) return;
 		if (visitedLinks.has(cleanURL(url.href))) return;
 		if (recursiveNavigationDepth > 3) return;
 		console.log('navigating to', url.href);
 		visitedLinks.add(cleanURL(url.href));
 
-		const extension = url.pathname.split('.').pop()?.toLocaleLowerCase();
+		const extension = getExtensionFromPathname(url.pathname);
 
 		if (extension && IMG_EXTENSIONS.includes(extension)) {
 			console.log('making image request for', url.href);
@@ -50,7 +46,10 @@ export async function scrapeTextFromDomain(mainUrl: URL): Promise<string> {
 		if (extension === 'pdf') {
 			console.log('making pdf request for', url.href);
 			const text = await getTextFromPDF(url);
-			if (text && textIncludesTerm(text, 'happyhour')) {
+			if (
+				(text && textIncludesTerm(text, 'happyhour')) ||
+				textIncludesTerm(url.href, 'happyhour')
+			) {
 				happyHourPdfText.push(`FROM ${url.href}:\n${text}\n`);
 			}
 			return;
@@ -72,7 +71,7 @@ export async function scrapeTextFromDomain(mainUrl: URL): Promise<string> {
 			if (!text) {
 				const frameSources = await getFrameAndIframeSources(page);
 				navigationQueue.add(() =>
-					navigateAndCollectText(recursiveNavigationDepth + 1, frameSources[0], frameSources[0]),
+					navigateAndCollectText(recursiveNavigationDepth + 1, frameSources[0]),
 				);
 			}
 
@@ -86,43 +85,63 @@ export async function scrapeTextFromDomain(mainUrl: URL): Promise<string> {
 				specialsText.push(`FROM ${url.href}:\n${text}\n`);
 			}
 
-			if (isHappyHourInUrl) {
-				const imageHrefs = await getPageImages(page);
-				imageHrefs.forEach((link) => {
+			const imageHrefs = (await getPageImages(page)).filter((url) => {
+				const extension = url && getExtensionFromPathname(url.pathname);
+				return extension && ['jpg', 'jpeg', 'png'].includes(extension);
+			});
+			imageHrefs
+				.filter((link) => isHappyHourInUrl || textIncludesTerm(link.href, 'happyhour'))
+				.forEach((link) => {
 					navigationQueue
-						.add(() => navigateAndCollectText(recursiveNavigationDepth + 1, link, innerMainUrl), {
+						.add(() => navigateAndCollectText(recursiveNavigationDepth + 1, link), {
 							priority: 30,
 						})
 						.catch((error) => {
 							console.error(`Failed to process ${link.href}: ${error}`);
 						});
 				});
-			}
 
-			const internalLinks = (await getPageLinks(page, url)).filter(
-				(link) => link.hostname === mainUrl.hostname,
-			);
-			internalLinks.forEach((link) => {
-				let priority = 1;
-				if (link.origin === mainUrl.origin && link.pathname === mainUrl.pathname) {
-					priority += 10;
-				}
+			const pageLinks = await getPageLinks(page, url);
 
-				if (textIncludesTerm(link.href, 'happyhour')) {
-					priority += 5;
-				} else if (textIncludesTerm(link.href, 'special')) {
-					priority += 4;
-				} else if (textIncludesTerm(link.href, 'menu')) {
-					priority += 3;
-				}
-				navigationQueue
-					.add(() => navigateAndCollectText(recursiveNavigationDepth + 1, link, innerMainUrl), {
-						priority,
-					})
-					.catch((error) => {
-						console.error(`Failed to process ${link.href}: ${error}`);
-					});
-			});
+			pageLinks
+				.filter((link) => {
+					const extension = getExtensionFromPathname(link.pathname);
+					return extension === 'pdf';
+				})
+				.forEach((link) => {
+					navigationQueue
+						.add(() => navigateAndCollectText(recursiveNavigationDepth + 1, link), {
+							priority: 25,
+						})
+						.catch((error) => {
+							console.error(`Failed to process ${url.href}: ${error}`);
+						});
+				});
+
+			pageLinks
+				.filter((link) => link.hostname === mainUrl.hostname)
+				.forEach((link) => {
+					let priority = 1;
+					if (link.origin === mainUrl.origin && link.pathname === mainUrl.pathname) {
+						priority += 10;
+					}
+
+					if (textIncludesTerm(link.href, 'happyhour')) {
+						console.log('found happy hour link', link.href);
+						priority += 5;
+					} else if (textIncludesTerm(link.href, 'special')) {
+						priority += 4;
+					} else if (textIncludesTerm(link.href, 'menu')) {
+						priority += 3;
+					}
+					navigationQueue
+						.add(() => navigateAndCollectText(recursiveNavigationDepth + 1, link), {
+							priority,
+						})
+						.catch((error) => {
+							console.error(`Failed to process ${link.href}: ${error}`);
+						});
+				});
 			page.close();
 		} catch (error) {
 			console.error(`Failed to process ${url.href}: ${error}`);
@@ -144,11 +163,7 @@ export async function scrapeTextFromDomain(mainUrl: URL): Promise<string> {
 	${happyHourLinkImagesText.join('\n')}
 	${happyHourLinkText.join('\n')}
 	${happyHourPdfText.join('\n')}
-	${
-		!happyHourLinkImagesText.length && !happyHourLinkText.length && !happyHourPdfText.length
-			? happyHourText.join('\n')
-			: ''
-	}
+	${happyHourText.join('\n')}
 	${
 		!happyHourLinkImagesText.length &&
 		!happyHourLinkText.length &&
@@ -197,12 +212,9 @@ async function getPageImages(page: Page): Promise<URL[]> {
 					return undefined;
 				}
 			})
-			.filter((url) => {
-				const extension = url && url.pathname.split('.').pop();
-				return extension && ['jpg', 'jpeg', 'png'].includes(extension);
-			})
+			.filter((url) => url)
 			.map((url) => {
-				if (!url) throw Error('blah');
+				if (!url) throw Error('URL is undefined, we should have filtered that out');
 				return url.href;
 			}),
 	);
@@ -307,3 +319,7 @@ function cleanURL(inputURL: string): string {
 
 	return inputURL;
 }
+
+const getExtensionFromPathname = (pathname: string) => {
+	return pathname.split('.').pop()?.toLocaleLowerCase();
+};

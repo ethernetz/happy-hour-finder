@@ -4,7 +4,7 @@ import mongoClientPromise, { geocodingClient } from './config.js';
 import { getHappyHourInfoFromUrl } from './getHappyHourInfoFromUrl.js';
 
 const BASE_URL =
-	'https://www.yelp.com/search?find_desc=Bars&find_loc=New+York%2C+NY+10001&l=p%3ANY%3ANew_York%3AManhattan%3AEast_Village&sortby=review_count&start=20';
+	'https://www.yelp.com/search?find_desc=Bars&find_loc=New+York%2C+NY+10001&l=p%3ANY%3ANew_York%3AManhattan%3AEast_Village&sortby=review_count&start=110';
 
 async function fetchSpotCardsListPage(page: Page): Promise<ElementHandle<Element>[]> {
 	const elements = await page.$$('[class^=" businessName"]');
@@ -94,7 +94,7 @@ export async function scrapeSpotsFromYelpPage(browser: Browser, page: Page): Pro
 					},
 					happyHours: null,
 				};
-				console.log('spot ${uniqueName} has no url, inserting into mongo');
+				console.log(`spot ${uniqueName} has no url, inserting into mongo`);
 				console.log(fullSpotInfo);
 				await collection.insertOne(fullSpotInfo);
 				continue;

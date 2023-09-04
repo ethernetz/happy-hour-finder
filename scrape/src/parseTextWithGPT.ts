@@ -81,7 +81,7 @@ export async function parseTextWithGPT(websiteText: string): Promise<HappyHour[]
 		'Below is the text data extracted from the website:\n' +
 		`${truncatedWebsiteText}\n` +
 		"Remember: Fabricating details is unacceptable. Only invoke 'logHappyHourDealIntoDatabase' if the website text explicitly mentions a happy hour. " +
-		'It is critical that you know the correct hours of the happy hour if you are going to log it into the database. ' +
+		'It is critical that you know the correct days and hours of the happy hour if you are going to log it into the database. ' +
 		'If hours of the happy hour are known, but the deal is not, still log the hours into the database.';
 
 	const response = await openai.chat.completions.create({
