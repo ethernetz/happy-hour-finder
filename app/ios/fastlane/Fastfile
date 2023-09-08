@@ -10,11 +10,7 @@ platform :ios do
         workspace: "Runner.xcworkspace",
         scheme: "Runner",
         export_method: 'app-store',
-        build_path: './build',
-        output_directory: "./", # Destination directory. `.` means the current directory
-        output_name: "Runner.ipa", # Name of the resulting `.ipa` file
         export_options: {
-          method: 'app-store',
           provisioningProfiles: { 
             "com.ethannetz.happyhourfinder" => "Ethan Netz"
           }
