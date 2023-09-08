@@ -39,7 +39,6 @@ jobs:
         working-directory: ./app/ios
         env:
           MATCH_PASSWORD: ${{ secrets.MATCH_PASSWORD }}
-          FASTLANE_USER: ${{ secrets.APPLE_ID }}
-          FASTLANE_PASSWORD: ${{ secrets.APPLE_ID_PASSWORD }}
-          FASTLANE_APPLE_APPLICATION_SPECIFIC_PASSWORD: ${{ secrets.APPLE_APPLICATION_SPECIFIC_PASSWORD }}
-          MATCH_GIT_BASIC_AUTHORIZATION: ${{ secrets.MATCH_GIT_BASIC_AUTHORIZATION }}
+          API_KEY_ID: ${{ secrets.API_KEY_ID }}
+          ISSUER_ID: ${{ secrets.ISSUER_ID }}
+          API_KEY: ${{ secrets.API_KEY }}
