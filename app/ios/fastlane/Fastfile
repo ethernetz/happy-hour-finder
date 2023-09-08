@@ -13,8 +13,6 @@ platform :ios do
         build_path: './build',
         output_directory: "./", # Destination directory. `.` means the current directory
         output_name: "Runner.ipa", # Name of the resulting `.ipa` file
-        skip_build_archive: true, # Skip archiving, only package `.app` to `.ipa`
-        skip_package_ipa: false, # Don't skip packaging to `.ipa`
         export_options: {
           method: 'app-store',
           provisioningProfiles: { 
