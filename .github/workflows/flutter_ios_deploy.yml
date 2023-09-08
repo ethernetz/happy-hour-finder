@@ -23,6 +23,10 @@ jobs:
         run: gem install bundler && bundle install
         working-directory: ./app/ios
 
+      - name: CocoaPods Install
+        run: pod install
+        working-directory: ./app/ios
+
       - run: flutter clean
         working-directory: ./app
       - run: flutter pub get
