@@ -5,6 +5,25 @@ platform :ios do
   lane :beta do
     match(type: "appstore", readonly: true)
 
+      gym(
+        workspace: "YourWorkspace.xcworkspace", # You specify your workspace or project here
+        scheme: "YourScheme",
+        clean: true,
+        export_method: 'app-store',
+        include_bitcode: true,
+        build_path: './build',
+        output_directory: "./", # Destination directory. `.` means the current directory
+        output_name: "Runner.ipa", # Name of the resulting `.ipa` file
+        skip_build_archive: true, # Skip archiving, only package `.app` to `.ipa`
+        skip_package_ipa: false, # Don't skip packaging to `.ipa`
+        export_options: {
+          method: 'app-store',
+          provisioningProfiles: { 
+            "com.ethannetz.happyhourfinder" => "Ethan Netz"
+          }
+        }
+      )
+
     api_key = app_store_connect_api_key(
       key_id: ENV["API_KEY_ID"],
       issuer_id: ENV["ISSUER_ID"],
