@@ -1,38 +1,34 @@
 default_platform(:ios)
-
 platform :ios do
-  desc "Push a new beta build to TestFlight"
-  lane :beta do
-    match(
-      type: "appstore", 
-      readonly: true,
-       app_identifier: "com.ethannetz.happyhourfinder",
-       api_key: app_store_connect_api_key(
-        key_id: ENV["API_KEY_ID"],
-        issuer_id: ENV["ISSUER_ID"],
-        key_content: ENV["API_KEY"],
-      )
-    )
-
-      gym(
-        configuration: "Release",
-        workspace: "Runner.xcworkspace",
-        scheme: "Runner",
-        export_method: 'app-store',
-        export_options: {
-          provisioningProfiles: { 
-            "com.ethannetz.happyhourfinder" => "match AppStore com.ethannetz.happyhourfinder"
-          }
-        }
-      )
-
-    # Increment the build number
-    increment_build_number(xcodeproj: "Runner.xcodeproj")
-
-    pilot(
-      api_key: api_key, 
-      ipa: "./Runner.ipa",
-      skip_submission: true,
-    )
-  end
+	desc "Push a new beta build to TestFlight"
+	lane :beta do
+		match(
+			type: "appstore", 
+			app_identifier: "com.ethannetz.happyhourfinder",
+			api_key: app_store_connect_api_key(
+				key_id: ENV["API_KEY_ID"],
+				issuer_id: ENV["ISSUER_ID"],
+				key_content: ENV["API_KEY"],
+			)
+		)
+		
+    gym(
+			configuration: "Release",
+			workspace: "Runner.xcworkspace",
+			scheme: "Runner",
+			export_method: 'app-store',
+			export_options: {
+				provisioningProfiles: { 
+					"com.ethannetz.happyhourfinder" => "match AppStore com.ethannetz.happyhourfinder"
+				}
+			}
+		)
+				# Increment the build number
+		increment_build_number(xcodeproj: "Runner.xcodeproj")
+				pilot(
+			api_key: api_key, 
+			ipa: "./Runner.ipa",
+			skip_submission: true,
+		)
+	end
 end
