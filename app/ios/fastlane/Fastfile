@@ -8,7 +8,7 @@ platform :ios do
     api_key = app_store_connect_api_key(
       key_id: ENV["API_KEY_ID"],
       issuer_id: ENV["ISSUER_ID"],
-      key_content: ENV["API_KEY"], # Assuming API_KEY contains the content of the .p8 file
+      key_content: ENV["API_KEY"],
       duration: 1200, # optional
       in_house: false # optional
     )
@@ -16,6 +16,10 @@ platform :ios do
     # Increment the build number
     increment_build_number(xcodeproj: "Runner.xcodeproj")
 
-    pilot(api_key: api_key)
+    pilot(
+      api_key: api_key, 
+      ipa: "./Runner.ipa",
+      skip_submission: true,
+    )
   end
 end
