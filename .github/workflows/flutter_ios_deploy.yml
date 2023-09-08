@@ -36,7 +36,7 @@ jobs:
         working-directory: ./app
 
       - name: Deploy
-        run: fastlane beta
+        run: fastlane --verbose
         working-directory: ./app/ios
         env:
           MATCH_PASSWORD: ${{ secrets.MATCH_PASSWORD }}
