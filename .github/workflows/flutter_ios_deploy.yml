@@ -39,6 +39,7 @@ jobs:
         working-directory: ./app/ios
         env:
           MATCH_PASSWORD: ${{ secrets.MATCH_PASSWORD }}
+          MATCH_GIT_BASIC_AUTHORIZATION: ${{ secrets.MATCH_GIT_BASIC_AUTHORIZATION }}
           API_KEY_ID: ${{ secrets.API_KEY_ID }}
           ISSUER_ID: ${{ secrets.ISSUER_ID }}
           API_KEY: ${{ secrets.API_KEY }}
