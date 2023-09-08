@@ -1,0 +1,33 @@
+name: Deploy to TestFlight
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  build:
+    runs-on: macOS-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Setup Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          flutter-version: '3.13.3'
+          channel: 'stable'
+
+      - name: Install Fastlane
+        run: gem install bundler && bundle install --with=fastlane
+        working-directory: app/ios # Set working directory to /app/ios
+
+      - name: Build and Deploy
+        run: fastlane beta
+        working-directory: app/ios # Set working directory to /app/ios
+        env:
+          MATCH_PASSWORD: ${{ secrets.MATCH_PASSWORD }}
+          APPLE_ID: ${{ secrets.APPLE_ID }}
+          APPLE_ID_PASSWORD: ${{ secrets.APPLE_ID_PASSWORD }}
+          MATCH_GIT_BASIC_AUTHORIZATION: ${{ secrets.MATCH_GIT_BASIC_AUTHORIZATION }}
