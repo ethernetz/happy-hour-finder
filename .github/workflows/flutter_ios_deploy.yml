@@ -35,9 +35,12 @@ jobs:
       - run: flutter build ios --release --no-codesign
         working-directory: ./app
 
-      - name: Deploy
-        run: fastlane --verbose
-        working-directory: ./app/ios
+      - name: Deploy iOS Beta to TestFlight via Fastlane
+        uses: maierj/fastlane-action@v1.4.0
+        with:
+          lane: beta
+          subdirectory: app/ios
+          options: --verbose
         env:
           MATCH_PASSWORD: ${{ secrets.MATCH_PASSWORD }}
           MATCH_GIT_BASIC_AUTHORIZATION: ${{ secrets.MATCH_GIT_BASIC_AUTHORIZATION }}
