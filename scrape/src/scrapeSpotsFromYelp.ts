@@ -4,7 +4,7 @@ import mongoClientPromise, { geocodingClient } from './config.js';
 import { getHappyHourInfoFromUrl } from './getHappyHourInfoFromUrl.js';
 
 const BASE_URL =
-	'https://www.yelp.com/search?find_desc=Bars&find_loc=New+York%2C+NY+10001&l=p%3ANY%3ANew_York%3AManhattan%3AEast_Village&sortby=review_count&start=110';
+	'https://www.yelp.com/search?find_desc=Bars&find_loc=New+York%2C+NY+10001&l=p%3ANY%3ANew_York%3AManhattan%3AEast_Village&sortby=review_count&attrs=HappyHour&start=100';
 
 async function fetchSpotCardsListPage(page: Page): Promise<ElementHandle<Element>[]> {
 	const elements = await page.$$('[class^=" businessName"]');
@@ -35,8 +35,7 @@ async function fetchSpotDetailsFromSpotPage(newPage: Page): Promise<SpotFromYelp
 		const address = addressElement
 			? addressElement.textContent?.replace('Get Directions', '').trim()
 			: null;
-		if (!address)
-			throw new Error("Couldn't find address. This should never happen. Please investigate.");
+		if (!address) return null;
 
 		// Get the URL
 		const businessWebsiteElements = Array.from(document.querySelectorAll('p'));

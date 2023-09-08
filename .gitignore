@@ -5,13 +5,13 @@
 node_modules
 
 # Build directories
-/app/build
+/web/build
 /scrape/dist
 /scrape/website-text/*
 
 # SvelteKit and Vite specific
 /.svelte-kit
-/app/.svelte-kit
+/web/.svelte-kit
 vite.config.js.timestamp-*
 vite.config.ts.timestamp-*
 
