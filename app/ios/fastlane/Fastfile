@@ -24,7 +24,7 @@ platform :ios do
 		import_certificate(
 			keychain_name: "tmp-keychain",
 			keychain_password: ENV["TEMP_KEYCHAIN_PASSWORD"],
-			certificate_path: "path/to/cert.p12",
+			certificate_path: "../happy-hour-finder-cert.p12",
 			certificate_password: ENV["CERT_PASSWORD"]
 		)
 	
