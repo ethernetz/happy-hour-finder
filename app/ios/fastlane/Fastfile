@@ -2,15 +2,6 @@ default_platform(:ios)
 platform :ios do
 	desc "Push a new beta build to TestFlight"
 	lane :beta do
-		match(
-			type: "appstore", 
-			app_identifier: "com.ethannetz.happyhourfinder",
-			api_key: app_store_connect_api_key(
-				key_id: ENV["API_KEY_ID"],
-				issuer_id: ENV["ISSUER_ID"],
-				key_content: ENV["API_KEY"],
-			)
-		)
 
 		create_keychain(
 			name: "temp-keychain",
@@ -21,12 +12,24 @@ platform :ios do
 			lock_when_sleeps: true
 		)
 
-		import_certificate(
-			keychain_name: "tmp-keychain",
-			keychain_password: ENV["TEMP_KEYCHAIN_PASSWORD"],
-			certificate_path: "../happy-hour-finder-cert.p12",
-			certificate_password: ENV["CERT_PASSWORD"]
+	    match(
+			type: "appstore", 
+			app_identifier: "com.ethannetz.happyhourfinder",
+			keychain_name: "temp-keychain",
+      		keychain_password: ENV["TEMP_KEYCHAIN_PASSWORD"], 
+			api_key: app_store_connect_api_key(
+				key_id: ENV["API_KEY_ID"],
+				issuer_id: ENV["ISSUER_ID"],
+				key_content: ENV["API_KEY"],
+			)
 		)
+
+		# import_certificate(
+		# 	keychain_name: "tmp-keychain",
+		# 	keychain_password: ENV["TEMP_KEYCHAIN_PASSWORD"],
+		# 	certificate_path: "../happy-hour-finder-cert.p12",
+		# 	certificate_password: ENV["CERT_PASSWORD"]
+		# )
 	
 		# 				# Increment the build number
 		# increment_build_number(xcodeproj: "Runner.xcodeproj")
