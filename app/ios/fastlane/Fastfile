@@ -27,11 +27,11 @@ platform :ios do
 		current_version = get_version_number()
 
 		latest_build_number = latest_testflight_build_number(
-			api_key: ENV["API_KEY_ID"],
+			api_key: ENV["API_KEY"],
 			version: current_version,
 			app_identifier: "com.ethannetz.happyhourfinder"
 		)
-		
+
 		increment_build_number(
 			build_number: (latest_build_number + 1),
 		)
