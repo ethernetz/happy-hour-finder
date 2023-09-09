@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "718991386279",
+    "project_id": "happy-hour-finder-397217",
+    "storage_bucket": "happy-hour-finder-397217.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:718991386279:android:0f959d9fbbdf84d6399d82",
+        "android_client_info": {
+          "package_name": "com.ethannetz.happyhourfinder"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDzmsHkQ6NP7hQkWIWTfGQUYYEUN1s-LK4"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
