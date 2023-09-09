@@ -5,7 +5,7 @@ on:
     branches:
       - main
     paths:
-      - 'app/**'
+      - 'functions/**'
       - '.github/workflows/functions_deploy.yml'
   workflow_dispatch:
 
