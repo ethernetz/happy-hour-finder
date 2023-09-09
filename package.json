@@ -4,12 +4,18 @@
 	"license": "UNLICENSED",
 	"workspaces": [
 		"web",
-		"scrape"
+		"scrape",
+		"functions"
 	],
 	"scripts": {
-		"dev": "yarn workspace app dev",
-		"build": "yarn workspace app build",
-		"scrape": "yarn workspace scrape go"
+		"web:dev": "yarn workspace web dev",
+		"web:build": "yarn workspace web build",
+		"scrape": "yarn workspace scrape go",
+		"dev": "concurrently \"yarn workspace functions build:watch\" \"firebase emulators:start --only functions\""
 	},
-	"dependencies": {}
+	"dependencies": {},
+	"devDependencies": {
+		"concurrently": "^8.2.1",
+		"firebase-tools": "^12.5.3"
+	}
 }

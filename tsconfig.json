@@ -9,5 +9,5 @@
 		"sourceMap": true,
 		"strict": true
 	},
-	"exclude": ["node_modules", "./web/svelte.config.js"]
+	"exclude": ["node_modules", "./web/svelte.config.js", "./scrape/dist/**/*"]
 }
