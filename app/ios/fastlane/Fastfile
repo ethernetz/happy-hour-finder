@@ -14,7 +14,7 @@ platform :ios do
 
 		create_keychain(
 			name: "temp-keychain",
-			password: "ENV["TEMP_KEYCHAIN_PASSWORD"]",
+			password: ENV["TEMP_KEYCHAIN_PASSWORD"],
 			default_keychain: true,
 			unlock: true,
 			timeout: 3600,
@@ -23,7 +23,7 @@ platform :ios do
 
 		import_certificate(
 			keychain_name: "tmp-keychain",
-			keychain_password: ENV["MY_KEYCHAIN_PASSWORD"],
+			keychain_password: ENV["TEMP_KEYCHAIN_PASSWORD"],
 			certificate_path: "path/to/cert.p12",
 			certificate_password: ENV["CERT_PASSWORD"]
 		)
