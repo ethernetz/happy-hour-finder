@@ -11,8 +11,27 @@ platform :ios do
 				key_content: ENV["API_KEY"],
 			)
 		)
-		
-    gym(
+
+		create_keychain(
+			name: "temp-keychain",
+			password: "ENV["TEMP_KEYCHAIN_PASSWORD"]",
+			default_keychain: true,
+			unlock: true,
+			timeout: 3600,
+			lock_when_sleeps: true
+		)
+
+		import_certificate(
+			keychain_name: "tmp-keychain",
+			keychain_password: ENV["MY_KEYCHAIN_PASSWORD"],
+			certificate_path: "path/to/cert.p12",
+			certificate_password: ENV["CERT_PASSWORD"]
+		)
+	
+		# 				# Increment the build number
+		# increment_build_number(xcodeproj: "Runner.xcodeproj")
+
+    	gym(
 			configuration: "Release",
 			workspace: "Runner.xcworkspace",
 			scheme: "Runner",
@@ -23,10 +42,8 @@ platform :ios do
 				}
 			}
 		)
-				# Increment the build number
-		increment_build_number(xcodeproj: "Runner.xcodeproj")
-				pilot(
-			api_key: api_key, 
+
+		pilot(
 			ipa: "./Runner.ipa",
 			skip_submission: true,
 		)

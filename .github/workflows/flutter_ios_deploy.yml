@@ -46,3 +46,4 @@ jobs:
           API_KEY_ID: ${{ secrets.API_KEY_ID }}
           ISSUER_ID: ${{ secrets.ISSUER_ID }}
           API_KEY: ${{ secrets.API_KEY }}
+          TEMP_KEYCHAIN_PASSWORD: ${{ secrets.TEMP_KEYCHAIN_PASSWORD }}
