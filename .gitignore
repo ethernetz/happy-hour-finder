@@ -21,5 +21,6 @@ vite.config.ts.timestamp-*
 !.env.example
 .env*.local
 
+firebase-debug.*.log
 firebase-debug.log
 ui-debug.log
