@@ -17,15 +17,32 @@ const getClient = async () => {
 	return client;
 };
 
+type CurrentLocation = {
+	latitude: number;
+	longitude: number;
+};
+
 // Specify the secret name in runWith parameter
 export const helloWorld = functions
 	.runWith({ secrets: ['MONGO_DB_CONNECTION_STRING'] })
-	.https.onCall(async (data, context) => {
+	.https.onCall(async ({ latitude, longitude }: CurrentLocation, context) => {
+		functions.logger.log('Current location:', latitude, longitude);
 		try {
-			const db = (await getClient()).db('happyHourDB');
-			const result = await db.collection('spots').findOne({});
-			// functions.logger.log('Result:', result);
-			return { message: 'Hello from Firebase!', data: result };
+			const spots = (await getClient()).db('happyHourDB').collection('spots');
+			const result = await spots
+				.find({
+					coordinates: {
+						$near: {
+							$geometry: { type: 'Point', coordinates: [longitude, latitude] },
+							$maxDistance: 1000,
+						},
+					},
+				})
+				.toArray();
+
+			functions.logger.log('Found spots:', result);
+
+			return { message: 'Hello from Firebase!', data: [] };
 		} catch (error) {
 			functions.logger.error('Error occurred:', error);
 			throw new functions.https.HttpsError('internal', 'Internal Server Error');
