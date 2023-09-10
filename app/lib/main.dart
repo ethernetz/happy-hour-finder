@@ -3,6 +3,7 @@ import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/foundation.dart';
 import 'firebase_options.dart';
 import 'package:flutter/material.dart';
+import 'package:location/location.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -51,6 +52,17 @@ class _MyHomePageState extends State<MyHomePage> {
 
   Future<void> _callHelloWorldFunction() async {
     print('callHelloWorldFunction');
+
+    final LocationData? locationData = await _getLocation();
+    if (locationData == null) {
+      setState(() {
+        _functionResponse = {
+          'message': 'Location not found',
+          'data': null,
+        };
+      });
+      return;
+    }
     HttpsCallable callable = FirebaseFunctions.instance.httpsCallable(
       'helloWorld',
       options: HttpsCallableOptions(
@@ -73,6 +85,33 @@ class _MyHomePageState extends State<MyHomePage> {
         };
       });
     }
+  }
+
+  Future<LocationData?> _getLocation() async {
+    Location location = new Location();
+
+    bool _serviceEnabled;
+    PermissionStatus _permissionGranted;
+    LocationData? _locationData;
+
+    _serviceEnabled = await location.serviceEnabled();
+    if (!_serviceEnabled) {
+      _serviceEnabled = await location.requestService();
+      if (!_serviceEnabled) {
+        return null;
+      }
+    }
+
+    _permissionGranted = await location.hasPermission();
+    if (_permissionGranted == PermissionStatus.denied) {
+      _permissionGranted = await location.requestPermission();
+      if (_permissionGranted != PermissionStatus.granted) {
+        return null;
+      }
+    }
+
+    _locationData = await location.getLocation();
+    return _locationData;
   }
 
   @override
