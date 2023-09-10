@@ -44,7 +44,10 @@ class MyHomePage extends StatefulWidget {
 }
 
 class _MyHomePageState extends State<MyHomePage> {
-  String _functionResponse = 'Press the button to call the function';
+  Map<String, dynamic> _functionResponse = {
+    'message': 'Press the button to call the function',
+    'data': null,
+  };
 
   Future<void> _callHelloWorldFunction() async {
     print('callHelloWorldFunction');
@@ -57,14 +60,17 @@ class _MyHomePageState extends State<MyHomePage> {
 
     try {
       final HttpsCallableResult result = await callable.call();
-      print(result);
+      print(result.data); // result.data should be a Map
       setState(() {
-        _functionResponse = result.data;
+        _functionResponse = result.data as Map<String, dynamic>;
       });
     } catch (e) {
       setState(() {
         if (kDebugMode) print(e);
-        _functionResponse = 'Function call failed: $e';
+        _functionResponse = {
+          'message': 'Function call failed',
+          'data': e.toString(),
+        };
       });
     }
   }
@@ -80,7 +86,10 @@ class _MyHomePageState extends State<MyHomePage> {
               onPressed: _callHelloWorldFunction,
               child: const Text('Call Hello World Function'),
             ),
-            Text(_functionResponse),
+            Text(
+              'Message: ${_functionResponse?['message'] ?? 'Default message'}\n'
+              'Data: ${_functionResponse?['data'] ?? 'Default data'}',
+            )
           ],
         ),
       ),

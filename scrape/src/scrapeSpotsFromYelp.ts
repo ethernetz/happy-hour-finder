@@ -100,7 +100,7 @@ export async function scrapeSpotsFromYelpPage(browser: Browser, page: Page): Pro
 			}
 			const spotWebsiteUrl = await getSpotWebsiteUrl(browser, spotDetails.yelpRedirectUrl);
 
-			const happyHourInfo = await getHappyHourInfoFromUrl(spotWebsiteUrl);
+			const happyHours = await getHappyHourInfoFromUrl(spotWebsiteUrl);
 
 			const fullSpotInfo: Spot = {
 				name: spotDetails.name,
@@ -108,7 +108,7 @@ export async function scrapeSpotsFromYelpPage(browser: Browser, page: Page): Pro
 				url: spotWebsiteUrl,
 				uniqueName,
 				checkedForHappyHours: true,
-				happyHours: happyHourInfo,
+				happyHours: happyHours,
 				coordinates: {
 					type: 'Point',
 					coordinates: [longitude, latitude],
