@@ -1,3 +1,4 @@
+import 'package:app/spot.dart';
 import 'package:cloud_functions/cloud_functions.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/foundation.dart';
@@ -29,9 +30,11 @@ class MyApp extends StatelessWidget {
         colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple),
         useMaterial3: true,
       ),
-      home: const Scaffold(
-        body: Center(
-          child: MyHomePage(),
+      home: const SafeArea(
+        child: Scaffold(
+          body: Center(
+            child: MyHomePage(),
+          ),
         ),
       ),
     );
@@ -45,10 +48,8 @@ class MyHomePage extends StatefulWidget {
 }
 
 class _MyHomePageState extends State<MyHomePage> {
-  Map<String, dynamic> _functionResponse = {
-    'message': 'Press the button to call the function',
-    'data': null,
-  };
+  List<Spot> spots = [];
+  String functionMessage = 'No function called yet';
 
   Future<void> _callHelloWorldFunction() async {
     print('callHelloWorldFunction');
@@ -56,62 +57,65 @@ class _MyHomePageState extends State<MyHomePage> {
     final LocationData? locationData = await _getLocation();
     if (locationData == null) {
       setState(() {
-        _functionResponse = {
-          'message': 'Location not found',
-          'data': null,
-        };
+        spots = [];
+        functionMessage = 'Location not found';
       });
       return;
     }
     HttpsCallable callable = FirebaseFunctions.instance.httpsCallable(
       'helloWorld',
       options: HttpsCallableOptions(
-        timeout: const Duration(seconds: 5),
+        timeout: const Duration(seconds: 10),
       ),
     );
 
+    final Map<String, dynamic> payload = {
+      'latitude': locationData.latitude,
+      'longitude': locationData.longitude
+    };
+
     try {
-      final HttpsCallableResult result = await callable.call();
-      print(result.data); // result.data should be a Map
+      final HttpsCallableResult response = await callable.call(payload);
       setState(() {
-        _functionResponse = result.data as Map<String, dynamic>;
+        spots = (response.data as List).map((spotJson) {
+          return Spot.fromJson(Map<String, dynamic>.from(spotJson));
+        }).toList();
+        functionMessage = 'Function call succeeded';
       });
     } catch (e) {
       setState(() {
         if (kDebugMode) print(e);
-        _functionResponse = {
-          'message': 'Function call failed',
-          'data': e.toString(),
-        };
+        spots = [];
+        functionMessage = 'Function call failed';
       });
     }
   }
 
   Future<LocationData?> _getLocation() async {
-    Location location = new Location();
+    Location location = Location();
 
-    bool _serviceEnabled;
-    PermissionStatus _permissionGranted;
-    LocationData? _locationData;
+    bool serviceEnabled;
+    PermissionStatus permissionGranted;
+    LocationData? locationData;
 
-    _serviceEnabled = await location.serviceEnabled();
-    if (!_serviceEnabled) {
-      _serviceEnabled = await location.requestService();
-      if (!_serviceEnabled) {
+    serviceEnabled = await location.serviceEnabled();
+    if (!serviceEnabled) {
+      serviceEnabled = await location.requestService();
+      if (!serviceEnabled) {
         return null;
       }
     }
 
-    _permissionGranted = await location.hasPermission();
-    if (_permissionGranted == PermissionStatus.denied) {
-      _permissionGranted = await location.requestPermission();
-      if (_permissionGranted != PermissionStatus.granted) {
+    permissionGranted = await location.hasPermission();
+    if (permissionGranted == PermissionStatus.denied) {
+      permissionGranted = await location.requestPermission();
+      if (permissionGranted != PermissionStatus.granted) {
         return null;
       }
     }
 
-    _locationData = await location.getLocation();
-    return _locationData;
+    locationData = await location.getLocation();
+    return locationData;
   }
 
   @override
@@ -126,9 +130,19 @@ class _MyHomePageState extends State<MyHomePage> {
               child: const Text('Call Hello World Function'),
             ),
             Text(
-              'Message: ${_functionResponse?['message'] ?? 'Default message'}\n'
-              'Data: ${_functionResponse?['data'] ?? 'Default data'}',
-            )
+              functionMessage,
+              style: const TextStyle(fontSize: 18.0),
+            ),
+            Expanded(
+              child: ListView.builder(
+                itemCount: spots.length,
+                itemBuilder: (context, index) {
+                  return ListTile(
+                    title: Text(spots[index].name),
+                  );
+                },
+              ),
+            ),
           ],
         ),
       ),

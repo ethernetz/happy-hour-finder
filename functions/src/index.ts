@@ -25,24 +25,30 @@ type CurrentLocation = {
 // Specify the secret name in runWith parameter
 export const helloWorld = functions
 	.runWith({ secrets: ['MONGO_DB_CONNECTION_STRING'] })
-	.https.onCall(async ({ latitude, longitude }: CurrentLocation, context) => {
+	.https.onCall(async ({ latitude, longitude }: CurrentLocation) => {
 		functions.logger.log('Current location:', latitude, longitude);
 		try {
 			const spots = (await getClient()).db('happyHourDB').collection('spots');
-			const result = await spots
-				.find({
-					coordinates: {
-						$near: {
-							$geometry: { type: 'Point', coordinates: [longitude, latitude] },
-							$maxDistance: 1000,
-						},
+
+			const pipeline = [
+				{
+					$geoNear: {
+						near: { type: 'Point', coordinates: [longitude, latitude] },
+						distanceField: 'distance',
+						spherical: true,
+						maxDistance: 500,
 					},
-				})
-				.toArray();
+				},
+				{
+					$match: { happyHours: { $ne: null } },
+				},
+			];
 
-			functions.logger.log('Found spots:', result);
+			const result = await spots.aggregate(pipeline).toArray();
 
-			return { message: 'Hello from Firebase!', data: [] };
+			functions.logger.log('Found spots with distances:', result);
+
+			return result;
 		} catch (error) {
 			functions.logger.error('Error occurred:', error);
 			throw new functions.https.HttpsError('internal', 'Internal Server Error');

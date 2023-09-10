@@ -78,7 +78,7 @@ export async function scrapeSpotsFromYelpPage(browser: Browser, page: Page): Pro
 				continue;
 			}
 
-			const [latitude, longitude] = await getCoordinates(spotDetails.address);
+			const { latitude, longitude } = await getCoordinates(spotDetails.address);
 
 			if (!spotDetails.yelpRedirectUrl) {
 				const fullSpotInfo: Spot = {
@@ -167,7 +167,7 @@ async function getSpotWebsiteUrl(browser: Browser, yelpRedirectUrl: string): Pro
 	return spotWebsiteUrl;
 }
 
-async function getCoordinates(address: string): Promise<number[]> {
+async function getCoordinates(address: string): Promise<{ latitude: number; longitude: number }> {
 	const response = await geocodingClient
 		.forwardGeocode({
 			query: address,
@@ -176,7 +176,8 @@ async function getCoordinates(address: string): Promise<number[]> {
 			limit: 1,
 		})
 		.send();
-	return response.body.features[0].geometry.coordinates;
+	const [longitude, latitude] = response.body.features[0].geometry.coordinates;
+	return { latitude, longitude };
 }
 
 export async function scrapeSpotsFromYelp() {
