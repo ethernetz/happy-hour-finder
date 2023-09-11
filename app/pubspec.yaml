@@ -40,6 +40,7 @@ dependencies:
   cloud_functions: ^4.4.0
   firebase_crashlytics: ^3.3.5
   location: ^5.0.3
+  intl: ^0.18.1
 
 dev_dependencies:
   flutter_test:

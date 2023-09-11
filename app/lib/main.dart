@@ -1,4 +1,5 @@
 import 'package:app/spot.dart';
+import 'package:app/spot_card.dart';
 import 'package:cloud_functions/cloud_functions.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/foundation.dart';
@@ -49,16 +50,14 @@ class MyHomePage extends StatefulWidget {
 
 class _MyHomePageState extends State<MyHomePage> {
   List<Spot> spots = [];
-  String functionMessage = 'No function called yet';
 
-  Future<void> _callHelloWorldFunction() async {
-    print('callHelloWorldFunction');
+  Future<void> _callGetHappyHourSpots() async {
+    print('_callGetHappyHourSpots');
 
     final LocationData? locationData = await _getLocation();
     if (locationData == null) {
       setState(() {
         spots = [];
-        functionMessage = 'Location not found';
       });
       return;
     }
@@ -80,13 +79,11 @@ class _MyHomePageState extends State<MyHomePage> {
         spots = (response.data as List).map((spotJson) {
           return Spot.fromJson(Map<String, dynamic>.from(spotJson));
         }).toList();
-        functionMessage = 'Function call succeeded';
       });
     } catch (e) {
       setState(() {
         if (kDebugMode) print(e);
         spots = [];
-        functionMessage = 'Function call failed';
       });
     }
   }
@@ -125,20 +122,17 @@ class _MyHomePageState extends State<MyHomePage> {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
+            const SizedBox(height: 20.0),
             ElevatedButton(
-              onPressed: _callHelloWorldFunction,
-              child: const Text('Call Hello World Function'),
-            ),
-            Text(
-              functionMessage,
-              style: const TextStyle(fontSize: 18.0),
+              onPressed: _callGetHappyHourSpots,
+              child: const Text('Load happy hour spots'),
             ),
             Expanded(
               child: ListView.builder(
                 itemCount: spots.length,
                 itemBuilder: (context, index) {
                   return ListTile(
-                    title: Text(spots[index].name),
+                    title: SpotCard(spot: spots[index]),
                   );
                 },
               ),
