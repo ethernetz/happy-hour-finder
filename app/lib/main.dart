@@ -6,6 +6,7 @@ import 'package:flutter/foundation.dart';
 import 'firebase_options.dart';
 import 'package:flutter/material.dart';
 import 'package:location/location.dart';
+import 'package:map_launcher/map_launcher.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -20,6 +21,17 @@ Future<void> main() async {
     }
   }
   runApp(const MyApp());
+}
+
+Future<void> openInMaps(Spot spot) async {
+  final availableMaps = await MapLauncher.installedMaps;
+
+  await availableMaps.first.showDirections(
+    destination: Coords(
+        spot.coordinates.coordinates[1], spot.coordinates.coordinates[0]),
+    destinationTitle: spot.name,
+    directionsMode: DirectionsMode.walking,
+  );
 }
 
 class MyApp extends StatelessWidget {
@@ -119,7 +131,7 @@ class _MyHomePageState extends State<MyHomePage> {
   @override
   Widget build(BuildContext context) {
     var filteredSpots = showOnlyCurrentHappyHour
-        ? spots!.where((spot) => spot.getCurrentHappyHour() != null).toList()
+        ? spots?.where((spot) => spot.getCurrentHappyHour() != null).toList()
         : spots;
     return Scaffold(
       body: Center(
@@ -151,6 +163,9 @@ class _MyHomePageState extends State<MyHomePage> {
                           itemBuilder: (context, index) {
                             return ListTile(
                               title: SpotCard(spot: filteredSpots[index]),
+                              onTap: () {
+                                openInMaps(filteredSpots[index]);
+                              },
                             );
                           },
                         ),
