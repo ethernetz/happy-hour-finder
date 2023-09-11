@@ -49,7 +49,8 @@ class MyHomePage extends StatefulWidget {
 }
 
 class _MyHomePageState extends State<MyHomePage> {
-  List<Spot> spots = [];
+  List<Spot>? spots;
+  bool showOnlyCurrentHappyHour = false;
 
   Future<void> _callGetHappyHourSpots() async {
     print('_callGetHappyHourSpots');
@@ -117,6 +118,9 @@ class _MyHomePageState extends State<MyHomePage> {
 
   @override
   Widget build(BuildContext context) {
+    var filteredSpots = showOnlyCurrentHappyHour
+        ? spots!.where((spot) => spot.getCurrentHappyHour() != null).toList()
+        : spots;
     return Scaffold(
       body: Center(
         child: Column(
@@ -127,15 +131,29 @@ class _MyHomePageState extends State<MyHomePage> {
               onPressed: _callGetHappyHourSpots,
               child: const Text('Load happy hour spots'),
             ),
+            ElevatedButton(
+              onPressed: () {
+                setState(() {
+                  showOnlyCurrentHappyHour = !showOnlyCurrentHappyHour;
+                });
+              },
+              child: Text(showOnlyCurrentHappyHour
+                  ? 'Show all spots'
+                  : 'Show only current happy hour spots'),
+            ),
             Expanded(
-              child: ListView.builder(
-                itemCount: spots.length,
-                itemBuilder: (context, index) {
-                  return ListTile(
-                    title: SpotCard(spot: spots[index]),
-                  );
-                },
-              ),
+              child: filteredSpots == null
+                  ? const Text("Click the button to load happy hour spots")
+                  : filteredSpots.isEmpty
+                      ? const Text("No open happy hour spots found")
+                      : ListView.builder(
+                          itemCount: filteredSpots.length,
+                          itemBuilder: (context, index) {
+                            return ListTile(
+                              title: SpotCard(spot: filteredSpots[index]),
+                            );
+                          },
+                        ),
             ),
           ],
         ),

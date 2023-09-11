@@ -1,5 +1,6 @@
 import 'package:app/spot.dart';
 import 'package:flutter/material.dart';
+import 'package:intl/intl.dart';
 
 class SpotCard extends StatelessWidget {
   final Spot spot;
@@ -40,7 +41,7 @@ class SpotCard extends StatelessWidget {
             // Open/Closed Status
             if (currentHappyHour != null)
               Text(
-                'Happy hour happening now! ${currentHappyHour.startTime} - ${currentHappyHour.endTime}',
+                'Happy hour until ${convertTo12Hour(currentHappyHour.endTime)}!',
                 style: const TextStyle(
                   color: Colors.green,
                   fontSize: 16.0,
@@ -73,4 +74,9 @@ class SpotCard extends StatelessWidget {
       ),
     );
   }
+}
+
+String convertTo12Hour(String time24) {
+  final DateTime tempDate = DateFormat("HH:mm").parse(time24);
+  return DateFormat("h:mm a").format(tempDate).toLowerCase();
 }

@@ -45,6 +45,9 @@ class Spot {
     String currentDay = DateFormat('EEEE').format(now).toLowerCase();
     String currentTime = DateFormat('HH:mm').format(now);
 
+    // String currentDay = "monday";
+    // String currentTime = "20:00";
+
     for (HappyHour hh in happyHours) {
       if (hh.day.toLowerCase() == currentDay) {
         // Check if the current time is within the Happy Hour time range
