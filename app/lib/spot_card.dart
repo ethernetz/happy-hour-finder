@@ -21,56 +21,57 @@ class SpotCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     HappyHour? currentHappyHour = spot.getCurrentHappyHour();
-    return Card(
-      margin: const EdgeInsets.all(8.0),
-      child: Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            // Spot name
+    return Container(
+      padding: const EdgeInsets.all(16.0),
+      decoration: BoxDecoration(
+        color: Colors.black26,
+        borderRadius: BorderRadius.circular(12),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // Spot name
+          Text(
+            spot.name,
+            style: const TextStyle(
+              fontSize: 20.0,
+              fontWeight: FontWeight.bold,
+            ),
+          ),
+          const SizedBox(height: 8.0),
+
+          // Open/Closed Status
+          if (currentHappyHour != null)
             Text(
-              spot.name,
+              'Happy hour until ${convertTo12Hour(currentHappyHour.endTime)}!',
               style: const TextStyle(
-                fontSize: 20.0,
-                fontWeight: FontWeight.bold,
+                color: Colors.green,
+                fontSize: 16.0,
               ),
             ),
-            const SizedBox(height: 8.0),
+          const SizedBox(height: 8.0),
 
-            // Open/Closed Status
-            if (currentHappyHour != null)
-              Text(
-                'Happy hour until ${convertTo12Hour(currentHappyHour.endTime)}!',
-                style: const TextStyle(
-                  color: Colors.green,
-                  fontSize: 16.0,
-                ),
-              ),
-            const SizedBox(height: 8.0),
-
-            // Happy Hour Deal
-            if (spot.happyHours.isNotEmpty &&
-                spot.happyHours[0].deal != 'Unknown')
-              Text(
-                spot.happyHours[0].deal,
-                style: const TextStyle(
-                  fontSize: 16.0,
-                  color: Colors.blueGrey,
-                ),
-              ),
-            const SizedBox(height: 8.0),
-
-            // Distance
+          // Happy Hour Deal
+          if (spot.happyHours.isNotEmpty &&
+              spot.happyHours[0].deal != 'Unknown')
             Text(
-              americanizeDistance(spot.distance),
+              spot.happyHours[0].deal,
               style: const TextStyle(
                 fontSize: 16.0,
-                color: Colors.grey,
+                color: Colors.white,
               ),
             ),
-          ],
-        ),
+          const SizedBox(height: 8.0),
+
+          // Distance
+          Text(
+            americanizeDistance(spot.distance),
+            style: TextStyle(
+              fontSize: 16.0,
+              color: Colors.grey[700],
+            ),
+          ),
+        ],
       ),
     );
   }
