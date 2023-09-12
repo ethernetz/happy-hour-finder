@@ -5,6 +5,7 @@ import 'package:location/location.dart';
 import 'package:app/spot_card.dart';
 import 'package:map_launcher/map_launcher.dart';
 import 'package:app/spot.dart';
+import 'package:liquid_pull_to_refresh/liquid_pull_to_refresh.dart';
 
 class MyHomePage extends StatefulWidget {
   const MyHomePage({super.key});
@@ -26,6 +27,14 @@ Future<void> openInMaps(Spot spot) async {
 class _MyHomePageState extends State<MyHomePage> {
   List<Spot>? spots;
   bool showOnlyCurrentHappyHour = false;
+  final GlobalKey<RefreshIndicatorState> _refreshIndicatorKey =
+      GlobalKey<RefreshIndicatorState>();
+
+  @override
+  void initState() {
+    super.initState();
+    _callGetHappyHourSpots();
+  }
 
   Future<void> _callGetHappyHourSpots() async {
     final LocationData? locationData = await _getLocation();
@@ -96,48 +105,65 @@ class _MyHomePageState extends State<MyHomePage> {
         : spots;
     return Scaffold(
       backgroundColor: Colors.grey[900],
-      body: SingleChildScrollView(
-        child: Center(
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              const SizedBox(height: 20.0),
-              ElevatedButton(
-                onPressed: _callGetHappyHourSpots,
-                child: const Text('Load happy hour spots'),
+      body: NestedScrollView(
+        headerSliverBuilder: (BuildContext context, bool innerBoxIsScrolled) {
+          return [
+            SliverAppBar(
+              expandedHeight: 50.0,
+              backgroundColor: Colors.transparent,
+              elevation: 0.0,
+              floating: false,
+              pinned: false,
+              flexibleSpace: Padding(
+                padding: const EdgeInsets.fromLTRB(50, 50, 50, 0.0),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    const Text("Happili"),
+                    ElevatedButton(
+                      onPressed: () {
+                        setState(() {
+                          showOnlyCurrentHappyHour = !showOnlyCurrentHappyHour;
+                        });
+                      },
+                      child: Text(showOnlyCurrentHappyHour
+                          ? 'Show all spots'
+                          : 'Show current'),
+                    ),
+                  ],
+                ),
               ),
-              ElevatedButton(
-                onPressed: () {
-                  setState(() {
-                    showOnlyCurrentHappyHour = !showOnlyCurrentHappyHour;
-                  });
-                },
-                child: Text(showOnlyCurrentHappyHour
-                    ? 'Show all spots'
-                    : 'Show only current happy hour spots'),
-              ),
-              filteredSpots == null
-                  ? const Text("Click the button to load happy hour spots")
-                  : filteredSpots.isEmpty
-                      ? const Text("No open happy hour spots found")
-                      : ListView.builder(
-                          itemCount: filteredSpots.length,
-                          shrinkWrap: true,
-                          physics: const NeverScrollableScrollPhysics(),
-                          itemBuilder: (context, index) {
-                            return Padding(
-                              padding: const EdgeInsets.symmetric(
-                                horizontal: 10,
-                                vertical: 5,
-                              ),
-                              child: SpotCard(
-                                spot: filteredSpots[index],
-                              ),
-                            );
-                          },
-                        ),
-            ],
-          ),
+            ),
+          ];
+        },
+        body: LiquidPullToRefresh(
+          key: _refreshIndicatorKey,
+          onRefresh: _callGetHappyHourSpots,
+          animSpeedFactor: 10,
+          springAnimationDurationInMilliseconds: 500,
+          child: filteredSpots == null
+              ? const Center(child: Text("Getting your happy hour spots"))
+              : filteredSpots.isEmpty
+                  ? ListView(
+                      physics: const AlwaysScrollableScrollPhysics(),
+                      children: const [
+                        Text("No happy hour spots found"),
+                      ],
+                    )
+                  : ListView.builder(
+                      itemCount: filteredSpots.length,
+                      itemBuilder: (context, index) {
+                        return Padding(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 10,
+                            vertical: 5,
+                          ),
+                          child: SpotCard(
+                            spot: filteredSpots[index],
+                          ),
+                        );
+                      },
+                    ),
         ),
       ),
     );
