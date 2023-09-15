@@ -1,10 +1,12 @@
 import 'package:cloud_functions/cloud_functions.dart';
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:location/location.dart';
 import 'package:app/spot_card.dart';
 import 'package:app/spot.dart';
 import 'package:liquid_pull_to_refresh/liquid_pull_to_refresh.dart';
+import 'package:flutter_spinkit/flutter_spinkit.dart';
 
 class MyHomePage extends StatefulWidget {
   const MyHomePage({super.key});
@@ -13,7 +15,9 @@ class MyHomePage extends StatefulWidget {
 }
 
 class _MyHomePageState extends State<MyHomePage> {
-  List<Spot>? spots;
+  List<Spot>? allSpots;
+  List<Spot>? currentSpots;
+
   bool showOnlyCurrentHappyHour = false;
   final GlobalKey<RefreshIndicatorState> _refreshIndicatorKey =
       GlobalKey<RefreshIndicatorState>();
@@ -28,7 +32,8 @@ class _MyHomePageState extends State<MyHomePage> {
     final LocationData? locationData = await _getLocation();
     if (locationData == null) {
       setState(() {
-        spots = [];
+        allSpots = [];
+        currentSpots = [];
       });
       return;
     }
@@ -47,14 +52,18 @@ class _MyHomePageState extends State<MyHomePage> {
     try {
       final HttpsCallableResult response = await callable.call(payload);
       setState(() {
-        spots = (response.data as List).map((spotJson) {
+        allSpots = (response.data as List).map((spotJson) {
           return Spot.fromJson(Map<String, dynamic>.from(spotJson));
         }).toList();
+        currentSpots =
+            allSpots!.where((spot) => spot.currentHappyHour != null).toList();
+        showOnlyCurrentHappyHour = currentSpots!.isNotEmpty;
       });
     } catch (e) {
       setState(() {
         if (kDebugMode) print(e);
-        spots = [];
+        allSpots = [];
+        currentSpots = [];
       });
     }
   }
@@ -88,40 +97,72 @@ class _MyHomePageState extends State<MyHomePage> {
 
   @override
   Widget build(BuildContext context) {
-    var filteredSpots = showOnlyCurrentHappyHour
-        ? spots?.where((spot) => spot.currentHappyHour != null).toList()
-        : spots;
+    var spots = showOnlyCurrentHappyHour ? currentSpots : allSpots;
     return Scaffold(
       backgroundColor: Colors.grey[900],
       body: NestedScrollView(
         headerSliverBuilder: (BuildContext context, bool innerBoxIsScrolled) {
           return [
             SliverAppBar(
-              expandedHeight: 50.0,
-              backgroundColor: Colors.transparent,
-              elevation: 0.0,
+              collapsedHeight: 80,
+              expandedHeight: 80,
               floating: false,
               pinned: false,
+              backgroundColor: Colors.transparent,
+              elevation: 0.0,
               flexibleSpace: Padding(
-                padding: const EdgeInsets.fromLTRB(50, 50, 50, 0.0),
+                padding: const EdgeInsets.fromLTRB(20, 50, 50, 0.0),
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    const Text("Happili"),
-                    ElevatedButton(
-                      onPressed: () {
-                        setState(() {
-                          showOnlyCurrentHappyHour = !showOnlyCurrentHappyHour;
-                        });
-                      },
-                      child: Text(showOnlyCurrentHappyHour
-                          ? 'Show all spots'
-                          : 'Show current'),
+                    const Text(
+                      "Happili",
+                      style: TextStyle(
+                        fontSize: 26, // Increase the font size here
+                      ),
                     ),
+                    if (currentSpots != null && currentSpots!.isNotEmpty)
+                      CupertinoButton(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 12,
+                          vertical: 4,
+                        ),
+                        color: showOnlyCurrentHappyHour
+                            ? Colors.white12
+                            : const Color.fromRGBO(255, 255, 255, 0.08),
+                        borderRadius: BorderRadius.circular(5.0),
+                        onPressed: () {
+                          setState(() {
+                            showOnlyCurrentHappyHour =
+                                !showOnlyCurrentHappyHour;
+                          });
+                        },
+                        child: Row(
+                          children: [
+                            if (showOnlyCurrentHappyHour) ...[
+                              const Icon(
+                                CupertinoIcons.check_mark,
+                                size: 14,
+                                color: Colors.white,
+                              ),
+                              const SizedBox(width: 5),
+                            ],
+                            Text(
+                              "Open now",
+                              style: TextStyle(
+                                fontSize: 14,
+                                color: showOnlyCurrentHappyHour
+                                    ? Colors.white
+                                    : Colors.white,
+                              ),
+                            ),
+                          ],
+                        ),
+                      )
                   ],
                 ),
               ),
-            ),
+            )
           ];
         },
         body: LiquidPullToRefresh(
@@ -130,9 +171,16 @@ class _MyHomePageState extends State<MyHomePage> {
           animSpeedFactor: 10,
           springAnimationDurationInMilliseconds: 500,
           showChildOpacityTransition: false,
-          child: filteredSpots == null
-              ? const Center(child: Text("Getting your happy hour spots"))
-              : filteredSpots.isEmpty
+          child: spots == null
+              ? const Padding(
+                  padding: EdgeInsets.only(bottom: 70.0),
+                  child: SpinKitWave(
+                    color: Colors.white,
+                    type: SpinKitWaveType.start,
+                    duration: Duration(milliseconds: 800),
+                  ),
+                )
+              : spots.isEmpty
                   ? ListView(
                       physics: const AlwaysScrollableScrollPhysics(),
                       children: const [
@@ -140,7 +188,8 @@ class _MyHomePageState extends State<MyHomePage> {
                       ],
                     )
                   : ListView.builder(
-                      itemCount: filteredSpots.length,
+                      itemCount: spots.length,
+                      padding: const EdgeInsets.only(top: 10.0),
                       itemBuilder: (context, index) {
                         return Padding(
                           padding: const EdgeInsets.symmetric(
@@ -148,7 +197,7 @@ class _MyHomePageState extends State<MyHomePage> {
                             vertical: 5,
                           ),
                           child: SpotCard(
-                            spot: filteredSpots[index],
+                            spot: spots[index],
                           ),
                         );
                       },

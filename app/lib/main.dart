@@ -27,6 +27,12 @@ class MyApp extends StatelessWidget {
     return MaterialApp(
       theme: ThemeData(
         brightness: Brightness.dark,
+        colorScheme: ColorScheme.fromSwatch(
+          brightness:
+              Brightness.dark, // Match the brightness setting in ThemeData
+        ).copyWith(
+          secondary: const Color(0xFFFAE96F),
+        ),
       ),
       home: const MyHomePage(),
     );
