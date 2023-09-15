@@ -1,6 +1,9 @@
 import 'package:app/spot.dart';
+import 'package:app/string_extension.dart';
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
+import 'package:map_launcher/map_launcher.dart';
 
 class SpotCard extends StatelessWidget {
   final Spot spot;
@@ -18,60 +21,114 @@ class SpotCard extends StatelessWidget {
     }
   }
 
+  Future<void> openInMaps() async {
+    final availableMaps = await MapLauncher.installedMaps;
+
+    await availableMaps.first.showDirections(
+      destination: Coords(
+          spot.coordinates.coordinates[1], spot.coordinates.coordinates[0]),
+      destinationTitle: spot.name,
+      directionsMode: DirectionsMode.walking,
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
-    HappyHour? currentHappyHour = spot.getCurrentHappyHour();
-    return Container(
+    HappyHour? currentHappyHour = spot.currentHappyHour;
+    HappyHour? nextHappyHour =
+        spot.nextHappyHour; // Assuming you've implemented this method
+
+    String timeText = "";
+    Color timeColor = Colors.white;
+    String dealText = "";
+
+    if (currentHappyHour != null) {
+      timeText =
+          'Happy hour until ${convertTo12Hour(currentHappyHour.endTime)}!';
+      timeColor = Colors.green;
+      dealText = currentHappyHour.deal;
+    } else if (nextHappyHour != null) {
+      final List<String> daysOfWeek = [
+        'sunday',
+        'monday',
+        'tuesday',
+        'wednesday',
+        'thursday',
+        'friday',
+        'saturday',
+      ];
+
+      String currentDay =
+          DateFormat('EEEE').format(DateTime.now()).toLowerCase();
+      int currentDayIndex = daysOfWeek.indexOf(currentDay);
+      int nextDayIndex =
+          (currentDayIndex + 1) % 7; // next day, loop to start if it's Saturday
+      String nextDayAfterCurrent = daysOfWeek[nextDayIndex];
+
+      String nextDay = nextHappyHour.day.toLowerCase();
+
+      if (nextDay == currentDay) {
+        timeText = 'Starts ${convertTo12Hour(nextHappyHour.startTime)}';
+      } else if (nextDay == nextDayAfterCurrent) {
+        timeText =
+            'Starts tomorrow at ${convertTo12Hour(nextHappyHour.startTime)}';
+      } else {
+        timeText =
+            'Starts ${nextDay.capitalize()} at ${convertTo12Hour(nextHappyHour.startTime)}';
+      }
+      dealText = nextHappyHour.deal;
+      timeColor = Colors.yellow;
+    }
+
+    return CupertinoButton(
       padding: const EdgeInsets.all(16.0),
-      decoration: BoxDecoration(
-        color: Colors.black26,
-        borderRadius: BorderRadius.circular(12),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          // Spot name
-          Text(
-            spot.name,
-            style: const TextStyle(
-              fontSize: 20.0,
-              fontWeight: FontWeight.bold,
-            ),
-          ),
-          const SizedBox(height: 8.0),
-
-          // Open/Closed Status
-          if (currentHappyHour != null)
+      onPressed: openInMaps,
+      color: Colors.black26,
+      child: Align(
+        alignment: Alignment.centerLeft,
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // Spot name
             Text(
-              'Happy hour until ${convertTo12Hour(currentHappyHour.endTime)}!',
+              spot.name,
               style: const TextStyle(
-                color: Colors.green,
+                fontSize: 20.0,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+            const SizedBox(height: 8.0),
+
+            Text(
+              timeText,
+              style: TextStyle(
+                color: timeColor,
                 fontSize: 16.0,
               ),
             ),
-          const SizedBox(height: 8.0),
+            const SizedBox(height: 8.0),
 
-          // Happy Hour Deal
-          if (spot.happyHours.isNotEmpty &&
-              spot.happyHours[0].deal != 'Unknown')
+            // Happy Hour Deal
+            if (dealText != 'Unknown')
+              Text(
+                dealText,
+                style: const TextStyle(
+                  fontSize: 16.0,
+                  color: Colors.white,
+                ),
+              ),
+            const SizedBox(height: 8.0),
+
+            // Distance
             Text(
-              spot.happyHours[0].deal,
-              style: const TextStyle(
+              americanizeDistance(spot.distance),
+              style: TextStyle(
                 fontSize: 16.0,
-                color: Colors.white,
+                color: Colors.grey[700],
               ),
             ),
-          const SizedBox(height: 8.0),
-
-          // Distance
-          Text(
-            americanizeDistance(spot.distance),
-            style: TextStyle(
-              fontSize: 16.0,
-              color: Colors.grey[700],
-            ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }

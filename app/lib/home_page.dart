@@ -3,7 +3,6 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:location/location.dart';
 import 'package:app/spot_card.dart';
-import 'package:map_launcher/map_launcher.dart';
 import 'package:app/spot.dart';
 import 'package:liquid_pull_to_refresh/liquid_pull_to_refresh.dart';
 
@@ -11,17 +10,6 @@ class MyHomePage extends StatefulWidget {
   const MyHomePage({super.key});
   @override
   State<MyHomePage> createState() => _MyHomePageState();
-}
-
-Future<void> openInMaps(Spot spot) async {
-  final availableMaps = await MapLauncher.installedMaps;
-
-  await availableMaps.first.showDirections(
-    destination: Coords(
-        spot.coordinates.coordinates[1], spot.coordinates.coordinates[0]),
-    destinationTitle: spot.name,
-    directionsMode: DirectionsMode.walking,
-  );
 }
 
 class _MyHomePageState extends State<MyHomePage> {
@@ -101,7 +89,7 @@ class _MyHomePageState extends State<MyHomePage> {
   @override
   Widget build(BuildContext context) {
     var filteredSpots = showOnlyCurrentHappyHour
-        ? spots?.where((spot) => spot.getCurrentHappyHour() != null).toList()
+        ? spots?.where((spot) => spot.currentHappyHour != null).toList()
         : spots;
     return Scaffold(
       backgroundColor: Colors.grey[900],
@@ -141,6 +129,7 @@ class _MyHomePageState extends State<MyHomePage> {
           onRefresh: _callGetHappyHourSpots,
           animSpeedFactor: 10,
           springAnimationDurationInMilliseconds: 500,
+          showChildOpacityTransition: false,
           child: filteredSpots == null
               ? const Center(child: Text("Getting your happy hour spots"))
               : filteredSpots.isEmpty

@@ -10,6 +10,11 @@ class Spot {
   final double distance;
   final GeoJSONPoint coordinates;
 
+  // Cache variables
+  DateTime? lastUpdated;
+  HappyHour? currentHappyHour;
+  HappyHour? nextHappyHour;
+
   Spot({
     required this.checkedForHappyHours,
     required this.happyHours,
@@ -17,9 +22,11 @@ class Spot {
     required this.name,
     required this.uniqueName,
     required this.address,
-    required this.coordinates,
     required this.distance,
-  });
+    required this.coordinates,
+  }) {
+    _updateHappyHourCache();
+  }
 
   // Function to convert JSON object to Spot instance
   factory Spot.fromJson(Map<String, dynamic> json) {
@@ -39,38 +46,84 @@ class Spot {
     );
   }
 
-  HappyHour? getCurrentHappyHour() {
-    // Get current day and time
+// Updates the cache with either the current or next happy hour
+  void _updateHappyHourCache() {
     DateTime now = DateTime.now();
     String currentDay = DateFormat('EEEE').format(now).toLowerCase();
     String currentTime = DateFormat('HH:mm').format(now);
 
-    // String currentDay = "monday";
-    // String currentTime = "20:00";
+    HappyHour? foundCurrent;
+    HappyHour? foundNext;
 
-    for (HappyHour hh in happyHours) {
-      if (hh.day.toLowerCase() == currentDay) {
-        // Check if the current time is within the Happy Hour time range
-        if (isCurrentTimeInHappyHour(
-            currentTime, hh.startTime, hh.endTime, hh.crossesMidnight)) {
-          return hh;
+    // Create a list of weekdays to handle rolling over to the next day
+    List<String> weekdays = [
+      'monday',
+      'tuesday',
+      'wednesday',
+      'thursday',
+      'friday',
+      'saturday',
+      'sunday'
+    ];
+    int todayIndex = weekdays.indexOf(currentDay);
+
+    // Check for the current or next happy hour
+    for (int i = 0; i < 7; i++) {
+      String checkDay = weekdays[(todayIndex + i) % 7];
+      var dayHappyHours =
+          happyHours.where((hh) => hh.day.toLowerCase() == checkDay).toList();
+      dayHappyHours.sort((a, b) => a.startTime.compareTo(b.startTime));
+
+      for (var hh in dayHappyHours) {
+        // If it's today, then we check the time as well
+        if (i == 0) {
+          if (isCurrentTimeInHappyHour(currentTime, hh.startTime, hh.endTime)) {
+            foundCurrent = hh;
+            break; // If we find the current happy hour, we can exit the loop
+          } else if (isCurrentTimeBeforeHappyHour(currentTime, hh.startTime)) {
+            foundNext ??= hh;
+          }
+        }
+        // If it's a future day and we haven't found the next happy hour yet, assign it
+        else if (i > 0 && foundNext == null) {
+          foundNext = hh;
+          break; // Exit the loop once we find the next happy hour
         }
       }
+
+      if (foundCurrent != null) {
+        break; // Exit the outer loop if we found the current happy hour
+      }
     }
-    return null;
+
+    // Update the cache variables
+    lastUpdated = now;
+    currentHappyHour = foundCurrent;
+    nextHappyHour = foundNext;
   }
 
-  bool isCurrentTimeInHappyHour(String currentTime, String startTime,
-      String endTime, bool crossesMidnight) {
+  // Checks if the current time is within a given happy hour time range
+  bool isCurrentTimeInHappyHour(
+    String currentTime,
+    String startTime,
+    String endTime,
+  ) {
     int ct = int.parse(currentTime.replaceAll(":", ""));
     int st = int.parse(startTime.replaceAll(":", ""));
     int et = int.parse(endTime.replaceAll(":", ""));
 
-    if (crossesMidnight) {
-      return (ct >= st || ct <= et);
-    } else {
-      return (ct >= st && ct <= et);
-    }
+    return (ct >= st && ct <= et);
+  }
+
+  // Checks if the current time is before a given happy hour start time
+  bool isCurrentTimeBeforeHappyHour(
+    String currentTime,
+    String startTime,
+  ) {
+    int ct = int.parse(currentTime.replaceAll(":", ""));
+    int st = int.parse(startTime.replaceAll(":", ""));
+
+    return (ct < st);
   }
 }
 

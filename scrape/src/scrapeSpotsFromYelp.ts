@@ -4,7 +4,7 @@ import mongoClientPromise, { geocodingClient } from './config.js';
 import { getHappyHourInfoFromUrl } from './getHappyHourInfoFromUrl.js';
 
 const BASE_URL =
-	'https://www.yelp.com/search?find_desc=Bars&find_loc=New+York%2C+NY+10001&l=p%3ANY%3ANew_York%3AManhattan%3AEast_Village&sortby=review_count&attrs=HappyHour&start=100';
+	'https://www.yelp.com/search?find_desc=Bars&find_loc=Greenwich+Village%2C+Manhattan%2C+NY&attrs=HappyHour&sortby=review_count&l=p%3ANY%3ANew_York%3AManhattan%3AGreenwich_Village&start=0';
 
 async function fetchSpotCardsListPage(page: Page): Promise<ElementHandle<Element>[]> {
 	const elements = await page.$$('[class^=" businessName"]');
@@ -63,7 +63,7 @@ export async function scrapeSpotsFromYelpPage(browser: Browser, page: Page): Pro
 	for (const element of spotCards) {
 		try {
 			const uniqueName = await getUniqueNameFromElement(element);
-			const existingSpot = await collection.findOne({ uniqueName });
+			let existingSpot = await collection.findOne({ uniqueName });
 			if (existingSpot !== null) {
 				console.log(`found ${uniqueName} in mongo, skipping scrapeSpotsFromYelpPage`);
 				continue;
@@ -75,6 +75,12 @@ export async function scrapeSpotsFromYelpPage(browser: Browser, page: Page): Pro
 			yelpSpotPage.close();
 			if (!spotDetails) {
 				console.log('spotDetails not found. Skipping.');
+				continue;
+			}
+
+			existingSpot = await collection.findOne({ address: spotDetails.address });
+			if (existingSpot !== null) {
+				console.log(`found ${spotDetails.address} in mongo, skipping scrapeSpotsFromYelpPage`);
 				continue;
 			}
 
@@ -127,7 +133,7 @@ async function getUniqueNameFromElement(element: ElementHandle): Promise<string>
 	const restaurantName = await element.evaluate((el) =>
 		(el as HTMLElement).innerText.replace(/^\d+\.\s/, ''),
 	);
-	return `${restaurantName}_eastvilliage`;
+	return `${restaurantName}_greenwhich`;
 }
 
 async function navigateToSpotPage(browser: Browser, element: ElementHandle): Promise<Page> {
