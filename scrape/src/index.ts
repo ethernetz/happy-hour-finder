@@ -1,5 +1,5 @@
-import { scrapeSpotsFromYelp } from './scrapeSpotsFromYelp.js';
-scrapeSpotsFromYelp();
+// import { scrapeSpotsFromYelp } from './scrapeSpotsFromYelp.js';
+// scrapeSpotsFromYelp();
 
 // import { scrapeMissingHappyHourInfo } from './scrapeMissingHappyHourInfo.js';
 // scrapeMissingHappyHourInfo();
@@ -9,3 +9,6 @@ scrapeSpotsFromYelp();
 
 // import { getHappyHourInfoFromUrl } from './getHappyHourInfoFromUrl.js';
 // getHappyHourInfoFromUrl('https://bin141.com/', true).then((res) => console.log(res));
+
+import { addMissingGooglePlaceId } from './scrapeMissingHappyHourInfo.js';
+addMissingGooglePlaceId();

@@ -9,6 +9,7 @@ class Spot {
   final String address;
   final double distance;
   final GeoJSONPoint coordinates;
+  final String googlePlaceId;
 
   // Cache variables
   DateTime? lastUpdated;
@@ -24,6 +25,7 @@ class Spot {
     required this.address,
     required this.distance,
     required this.coordinates,
+    required this.googlePlaceId,
   }) {
     _updateHappyHourCache();
   }
@@ -43,6 +45,7 @@ class Spot {
         Map<String, dynamic>.from(json['coordinates']),
       ),
       distance: json['distance'],
+      googlePlaceId: json['googlePlaceId'],
     );
   }
 

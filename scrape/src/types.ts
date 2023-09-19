@@ -30,6 +30,7 @@ export interface SpotBase {
 	url: string | null;
 	coordinates: GeoJSONPoint;
 	checkedForHappyHours: boolean;
+	googlePlaceId: string;
 }
 
 export interface HappyHour {

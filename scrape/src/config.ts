@@ -14,15 +14,13 @@ export const MAPB0X_API_KEY = process.env.MAPB0X_API_KEY as string;
 if (!MAPB0X_API_KEY) throw new Error('MAPB0X_API_KEY is not defined');
 export const geocodingClient = mbxGeocoding({ accessToken: MAPB0X_API_KEY });
 
-export const MONGODB_URI = process.env.MONGODB_URI as string;
+const MONGODB_URI = process.env.MONGODB_URI as string;
 if (!MONGODB_URI) throw new Error('MONGODB_URI is not defined');
 const client = new MongoClient(MONGODB_URI);
 console.log('Connecting to MongoDB...');
-const mongoClientPromise = client.connect().finally(() => {
+export const mongoClientPromise = client.connect().finally(() => {
 	console.log('Connected to MongoDB!');
 });
-
-export default mongoClientPromise;
 
 const OPENAI_API_KEY = process.env.OPENAI_API_KEY as string;
 if (!OPENAI_API_KEY) throw new Error('OPENAI_API_KEY not set');
@@ -37,3 +35,5 @@ export const websiteTextDB = new Level(websiteTextPath, { valueEncoding: 'json' 
 
 export const imageAnnotatorClient = new ImageAnnotatorClient();
 export const storage = new Storage();
+
+export const GOOGLE_MAPS_API_KEY = process.env.GOOGLE_MAPS_API_KEY as string;

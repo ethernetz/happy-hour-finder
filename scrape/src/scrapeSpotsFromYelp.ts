@@ -1,7 +1,8 @@
 import puppeteer, { Browser, ElementHandle, Page, Target } from 'puppeteer';
 import { Spot, SpotFromYelp } from './types';
-import mongoClientPromise, { geocodingClient } from './config.js';
+import { mongoClientPromise, geocodingClient } from './config.js';
 import { getHappyHourInfoFromUrl } from './getHappyHourInfoFromUrl.js';
+import { getGooglePlaceId } from './getGooglePlaceId';
 
 const BASE_URL =
 	'https://www.yelp.com/search?find_desc=Bars&find_loc=Greenwich+Village%2C+Manhattan%2C+NY&attrs=HappyHour&sortby=review_count&l=p%3ANY%3ANew_York%3AManhattan%3AGreenwich_Village&start=0';
@@ -86,6 +87,8 @@ export async function scrapeSpotsFromYelpPage(browser: Browser, page: Page): Pro
 
 			const { latitude, longitude } = await getCoordinates(spotDetails.address);
 
+			const googlePlaceId = await getGooglePlaceId(spotDetails.name, spotDetails.address);
+
 			if (!spotDetails.yelpRedirectUrl) {
 				const fullSpotInfo: Spot = {
 					name: spotDetails.name,
@@ -98,6 +101,7 @@ export async function scrapeSpotsFromYelpPage(browser: Browser, page: Page): Pro
 						coordinates: [longitude, latitude],
 					},
 					happyHours: null,
+					googlePlaceId,
 				};
 				console.log(`spot ${uniqueName} has no url, inserting into mongo`);
 				console.log(fullSpotInfo);
@@ -119,6 +123,7 @@ export async function scrapeSpotsFromYelpPage(browser: Browser, page: Page): Pro
 					type: 'Point',
 					coordinates: [longitude, latitude],
 				},
+				googlePlaceId,
 			};
 			console.log(fullSpotInfo);
 			await collection.insertOne(fullSpotInfo);
