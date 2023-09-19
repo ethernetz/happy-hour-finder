@@ -1,4 +1,10 @@
+import 'dart:convert';
+
+import 'package:app/env.dart';
+import 'package:app/google_place_details.dart';
+import 'package:app/google_place_details_cache.dart';
 import 'package:intl/intl.dart';
+import 'package:http/http.dart' as http;
 
 class Spot {
   final bool checkedForHappyHours;
@@ -16,6 +22,9 @@ class Spot {
   HappyHour? currentHappyHour;
   HappyHour? nextHappyHour;
 
+  //Google place cache variables
+  String? photoUrl;
+
   Spot({
     required this.checkedForHappyHours,
     required this.happyHours,
@@ -28,6 +37,25 @@ class Spot {
     required this.googlePlaceId,
   }) {
     _updateHappyHourCache();
+  }
+
+  Future<void> fetchGooglePlaceDetails() async {
+    if (googlePlaceDetailsCache.containsKey(googlePlaceId)) {
+      photoUrl = googlePlaceDetailsCache[googlePlaceId]!.photoUrl;
+    } else {
+      final url =
+          "https://maps.googleapis.com/maps/api/place/details/json?placeid=$googlePlaceId&fields=photo&key=${Env.googleMapsAPIKey}";
+      final response = await http.get(Uri.parse(url));
+      final jsonData = jsonDecode(response.body);
+      final String fetchedPhotoUrl =
+          'https://maps.googleapis.com/maps/api/place/photo?maxwidth=400&photoreference=${jsonData["result"]["photos"][0]["photo_reference"]}&key=${Env.googleMapsAPIKey}';
+
+      photoUrl = fetchedPhotoUrl;
+
+      // Store in the cache
+      googlePlaceDetailsCache[googlePlaceId] =
+          GooglePlaceDetails(photoUrl: fetchedPhotoUrl);
+    }
   }
 
   // Function to convert JSON object to Spot instance

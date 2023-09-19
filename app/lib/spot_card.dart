@@ -4,6 +4,7 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:map_launcher/map_launcher.dart';
+import 'package:cached_network_image/cached_network_image.dart';
 
 class SpotCard extends StatelessWidget {
   final Spot spot;
@@ -80,54 +81,70 @@ class SpotCard extends StatelessWidget {
       timeColor = Colors.yellow;
     }
 
-    return CupertinoButton(
-      padding: const EdgeInsets.all(16.0),
-      onPressed: openInMaps,
-      color: Colors.black26,
-      child: Align(
-        alignment: Alignment.centerLeft,
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            // Spot name
-            Text(
-              spot.name,
-              style: const TextStyle(
-                fontSize: 20.0,
-                fontWeight: FontWeight.bold,
-              ),
-            ),
-            const SizedBox(height: 8.0),
+    return FutureBuilder(
+      future: spot.fetchGooglePlaceDetails(),
+      builder: (BuildContext context, AsyncSnapshot<void> snapshot) =>
+          CupertinoButton(
+        padding: const EdgeInsets.all(16.0),
+        onPressed: openInMaps,
+        color: Colors.black26,
+        child: Align(
+          alignment: Alignment.centerLeft,
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              if (snapshot.connectionState == ConnectionState.done)
+                CachedNetworkImage(
+                  imageUrl: spot.photoUrl!,
+                  height: 100,
+                  width: double.infinity,
+                  fit: BoxFit.cover,
+                  placeholder: (context, url) =>
+                      const CircularProgressIndicator(),
+                  errorWidget: (context, url, error) => const Icon(Icons.error),
+                ),
 
-            Text(
-              timeText,
-              style: TextStyle(
-                color: timeColor,
-                fontSize: 16.0,
-              ),
-            ),
-            const SizedBox(height: 8.0),
-
-            // Happy Hour Deal
-            if (dealText != 'Unknown')
+              const SizedBox(height: 8.0),
+              // Spot name
               Text(
-                dealText,
+                spot.name,
                 style: const TextStyle(
-                  fontSize: 16.0,
-                  color: Colors.white,
+                  fontSize: 20.0,
+                  fontWeight: FontWeight.bold,
                 ),
               ),
-            const SizedBox(height: 8.0),
+              const SizedBox(height: 8.0),
 
-            // Distance
-            Text(
-              americanizeDistance(spot.distance),
-              style: TextStyle(
-                fontSize: 16.0,
-                color: Colors.grey[700],
+              Text(
+                timeText,
+                style: TextStyle(
+                  color: timeColor,
+                  fontSize: 16.0,
+                ),
               ),
-            ),
-          ],
+              const SizedBox(height: 8.0),
+
+              // Happy Hour Deal
+              if (dealText != 'Unknown')
+                Text(
+                  dealText,
+                  style: const TextStyle(
+                    fontSize: 16.0,
+                    color: Colors.white,
+                  ),
+                ),
+              const SizedBox(height: 8.0),
+
+              // Distance
+              Text(
+                americanizeDistance(spot.distance),
+                style: TextStyle(
+                  fontSize: 16.0,
+                  color: Colors.grey[700],
+                ),
+              ),
+            ],
+          ),
         ),
       ),
     );
