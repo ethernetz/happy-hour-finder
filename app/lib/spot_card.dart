@@ -93,7 +93,7 @@ class SpotCard extends StatelessWidget {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              if (snapshot.connectionState == ConnectionState.done)
+              if (spot.photoUrl != null)
                 CachedNetworkImage(
                   imageUrl: spot.photoUrl!,
                   height: 100,
@@ -102,7 +102,9 @@ class SpotCard extends StatelessWidget {
                   placeholder: (context, url) =>
                       const CircularProgressIndicator(),
                   errorWidget: (context, url, error) => const Icon(Icons.error),
-                ),
+                )
+              else
+                const SizedBox(height: 100),
 
               const SizedBox(height: 8.0),
               // Spot name
