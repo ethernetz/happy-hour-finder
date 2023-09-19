@@ -2,16 +2,16 @@ import puppeteer, { Browser, ElementHandle, Page, Target } from 'puppeteer';
 import { Spot, SpotFromYelp } from './types';
 import { mongoClientPromise, geocodingClient } from './config.js';
 import { getHappyHourInfoFromUrl } from './getHappyHourInfoFromUrl.js';
-import { getGooglePlaceId } from './getGooglePlaceId';
+import { getGooglePlaceId } from './getGooglePlaceId.js';
 
 const BASE_URL =
-	'https://www.yelp.com/search?find_desc=Bars&find_loc=Greenwich+Village%2C+Manhattan%2C+NY&attrs=HappyHour&sortby=review_count&l=p%3ANY%3ANew_York%3AManhattan%3AGreenwich_Village&start=0';
+	'https://www.yelp.com/search?find_desc=Bars&find_loc=New+York%2C+NY+10001&sortby=rating&attrs=HappyHour&l=p%3ANY%3ANew_York%3AManhattan%3ASoHo';
 
 async function fetchSpotCardsListPage(page: Page): Promise<ElementHandle<Element>[]> {
-	const elements = await page.$$('[class^=" businessName"]');
+	const elements = await page.$$('[class^="businessName"]');
 	const possibleFilteredElements = await Promise.all(
 		elements.map(async (element) => {
-			const innerText = await element.evaluate((el) => (el as HTMLElement).innerText);
+			const innerText = await element.$eval('h3 > span', (span) => (span as HTMLElement).innerText);
 			return /^\d+\.\s/.test(innerText) ? element : null;
 		}),
 	);
@@ -23,7 +23,7 @@ async function fetchSpotCardsListPage(page: Page): Promise<ElementHandle<Element
 async function fetchSpotDetailsFromSpotPage(newPage: Page): Promise<SpotFromYelp | null> {
 	return newPage.evaluate(() => {
 		// Get the name
-		const nameElement = document.querySelector('[class^=" headingLight"]');
+		const nameElement = document.querySelector('[class^="headingLight"]');
 		const name = nameElement ? nameElement.textContent : null;
 		if (!name) throw new Error("Couldn't find name. This should never happen. Please investigate.");
 
@@ -60,6 +60,8 @@ export async function scrapeSpotsFromYelpPage(browser: Browser, page: Page): Pro
 	await collection.createIndex({ uniqueName: 1 }, { unique: true });
 	await collection.createIndex({ coordinates: '2dsphere' });
 	const spotCards = await fetchSpotCardsListPage(page);
+
+	console.log(`found ${spotCards.length} spots on page`);
 
 	for (const element of spotCards) {
 		try {
@@ -138,7 +140,7 @@ async function getUniqueNameFromElement(element: ElementHandle): Promise<string>
 	const restaurantName = await element.evaluate((el) =>
 		(el as HTMLElement).innerText.replace(/^\d+\.\s/, ''),
 	);
-	return `${restaurantName}_greenwhich`;
+	return `${restaurantName}_soho`;
 }
 
 async function navigateToSpotPage(browser: Browser, element: ElementHandle): Promise<Page> {
