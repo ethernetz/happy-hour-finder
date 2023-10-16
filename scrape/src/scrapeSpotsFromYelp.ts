@@ -5,7 +5,7 @@ import { getHappyHourInfoFromUrl } from './getHappyHourInfoFromUrl.js';
 import { getGooglePlaceId } from './getGooglePlaceId.js';
 
 const BASE_URL =
-	'https://www.yelp.com/search?find_desc=Bars&find_loc=New+York%2C+NY+10001&sortby=rating&attrs=HappyHour&l=p%3ANY%3ANew_York%3AManhattan%3ASoHo';
+	'https://www.yelp.com/search?find_desc=Bars&find_loc=New+York%2C+NY+10001&sortby=rating&attrs=HappyHour&l=p%3ANY%3ANew_York%3AManhattan%3ATriBeCa';
 
 async function fetchSpotCardsListPage(page: Page): Promise<ElementHandle<Element>[]> {
 	const elements = await page.$$('[class^="businessName"]');
@@ -140,7 +140,7 @@ async function getUniqueNameFromElement(element: ElementHandle): Promise<string>
 	const restaurantName = await element.evaluate((el) =>
 		(el as HTMLElement).innerText.replace(/^\d+\.\s/, ''),
 	);
-	return `${restaurantName}_soho`;
+	return `${restaurantName}_tribeca`;
 }
 
 async function navigateToSpotPage(browser: Browser, element: ElementHandle): Promise<Page> {

@@ -138,13 +138,13 @@ class SpotCard extends StatelessWidget {
               const SizedBox(height: 8.0),
 
               // Distance
-              Text(
-                americanizeDistance(spot.distance),
-                style: TextStyle(
-                  fontSize: 16.0,
-                  color: Colors.grey[700],
-                ),
-              ),
+              // Text(
+              //   americanizeDistance(spot.distance),
+              //   style: TextStyle(
+              //     fontSize: 16.0,
+              //     color: Colors.grey[700],
+              //   ),
+              // ),
             ],
           ),
         ),

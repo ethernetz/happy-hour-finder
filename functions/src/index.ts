@@ -54,3 +54,39 @@ export const helloWorld = functions
 			throw new functions.https.HttpsError('internal', 'Internal Server Error');
 		}
 	});
+
+interface FindSpotsInAreaPayload {
+	boxCoordinates: [[number, number], [number, number]];
+}
+
+interface FindSpotsInAreaPayload {
+	boxCoordinates: [[number, number], [number, number]];
+}
+
+export const findSpotsInArea = functions
+	.runWith({ secrets: ['MONGO_DB_CONNECTION_STRING'] })
+	.https.onCall(async ({ boxCoordinates }: FindSpotsInAreaPayload) => {
+		try {
+			functions.logger.log('boxCoordinates', boxCoordinates);
+			const spots = (await getClient()).db('happyHourDB').collection('spots');
+			const pipeline = [
+				{
+					$match: {
+						coordinates: {
+							$geoWithin: {
+								$box: boxCoordinates,
+							},
+						},
+						happyHours: { $ne: null },
+					},
+				},
+			];
+
+			const result = await spots.aggregate(pipeline).toArray();
+			functions.logger.log('Found spots within area:', result);
+			return result;
+		} catch (error) {
+			functions.logger.error('Error occurred:', error);
+			throw new functions.https.HttpsError('internal', 'Internal Server Error');
+		}
+	});

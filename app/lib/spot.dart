@@ -6,6 +6,22 @@ import 'package:app/google_place_details_cache.dart';
 import 'package:intl/intl.dart';
 import 'package:http/http.dart' as http;
 
+import 'dart:math';
+
+double haversineDistance(List<double> coord1, List<double> coord2) {
+  const R = 6371.0; // Radius of the Earth in kilometers
+  final dLat = (coord2[1] - coord1[1]) * (pi / 180);
+  final dLon = (coord2[0] - coord1[0]) * (pi / 180);
+  final a = sin(dLat / 2) * sin(dLat / 2) +
+      cos(coord1[1] * (pi / 180)) *
+          cos(coord2[1] * (pi / 180)) *
+          sin(dLon / 2) *
+          sin(dLon / 2);
+  final c = 2 * atan2(sqrt(a), sqrt(1 - a));
+  final distance = R * c;
+  return distance;
+}
+
 class Spot {
   final bool checkedForHappyHours;
   final List<HappyHour> happyHours;
@@ -13,7 +29,6 @@ class Spot {
   final String name;
   final String uniqueName;
   final String address;
-  final double distance;
   final GeoJSONPoint coordinates;
   final String googlePlaceId;
 
@@ -25,6 +40,11 @@ class Spot {
   //Google place cache variables
   String? photoUrl;
 
+  int getDistance(List<double> userCoordinates) {
+    return haversineDistance(userCoordinates,
+        [coordinates.coordinates[0], coordinates.coordinates[1]]).round();
+  }
+
   Spot({
     required this.checkedForHappyHours,
     required this.happyHours,
@@ -32,7 +52,6 @@ class Spot {
     required this.name,
     required this.uniqueName,
     required this.address,
-    required this.distance,
     required this.coordinates,
     required this.googlePlaceId,
   }) {
@@ -72,7 +91,6 @@ class Spot {
       coordinates: GeoJSONPoint.fromJson(
         Map<String, dynamic>.from(json['coordinates']),
       ),
-      distance: json['distance'],
       googlePlaceId: json['googlePlaceId'],
     );
   }
