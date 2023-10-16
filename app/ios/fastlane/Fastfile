@@ -12,17 +12,17 @@ platform :ios do
 			lock_when_sleeps: true
 		)
 
-	    match(
-			type: "appstore", 
-			app_identifier: "com.ethannetz.happyhourfinder",
-			keychain_name: "temp-keychain",
-      		keychain_password: ENV["TEMP_KEYCHAIN_PASSWORD"], 
-			api_key: app_store_connect_api_key(
-				key_id: ENV["API_KEY_ID"],
-				issuer_id: ENV["ISSUER_ID"],
-				key_content: ENV["API_KEY"],
-			)	
-		)
+	    # match(
+		# 	type: "appstore", 
+		# 	app_identifier: "com.ethannetz.happyhourfinder",
+		# 	keychain_name: "temp-keychain",
+      	# 	keychain_password: ENV["TEMP_KEYCHAIN_PASSWORD"], 
+		# 	api_key: app_store_connect_api_key(
+		# 		key_id: ENV["API_KEY_ID"],
+		# 		issuer_id: ENV["ISSUER_ID"],
+		# 		key_content: ENV["API_KEY"],
+		# 	)	
+		# )
 
 		current_version = get_version_number()
 
