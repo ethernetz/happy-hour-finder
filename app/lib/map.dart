@@ -65,6 +65,7 @@ class MapState extends State<Map> {
       final spots = provider.allSpots;
       return GoogleMap(
         myLocationEnabled: true,
+        tiltGesturesEnabled: false,
         onCameraMove: _onCameraMove,
         mapType: MapType.hybrid,
         initialCameraPosition: const CameraPosition(
