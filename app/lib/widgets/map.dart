@@ -1,9 +1,9 @@
 import 'dart:async';
 
+import 'package:app/get_location.dart';
 import 'package:app/providers/map_visible_region_places_provider.dart';
 import 'package:flutter/material.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
-import 'package:location/location.dart';
 import 'package:provider/provider.dart';
 
 class Map extends StatefulWidget {
@@ -29,28 +29,13 @@ class MapState extends State<Map> {
   }
 
   setInitialLocation() async {
-    final Location location = Location();
-    bool serviceEnabled = await location.serviceEnabled();
-    if (!serviceEnabled) {
-      serviceEnabled = await location.requestService();
-      if (!serviceEnabled) {
-        return null;
-      }
-    }
-
-    PermissionStatus permissionGranted = await location.hasPermission();
-    if (permissionGranted == PermissionStatus.denied) {
-      permissionGranted = await location.requestPermission();
-      if (permissionGranted != PermissionStatus.granted) {
-        return null;
-      }
-    }
-
-    final locationData = await location.getLocation();
+    final location = await getLocation();
+    if (location == null) return;
     final controller = await _controller.future;
     final cameraPosition = CameraPosition(
-        target: LatLng(locationData.latitude!, locationData.longitude!),
-        zoom: 14.4746);
+      target: location,
+      zoom: 14,
+    );
     await controller
         .animateCamera(CameraUpdate.newCameraPosition(cameraPosition));
   }
@@ -69,8 +54,14 @@ class MapState extends State<Map> {
         onCameraMove: _onCameraMove,
         mapType: MapType.hybrid,
         initialCameraPosition: const CameraPosition(
-          target: LatLng(37.42796133580664, -122.085749655962),
-          zoom: 14.4746,
+          target: LatLng(40.776676, -73.971321),
+          zoom: 14,
+        ),
+        cameraTargetBounds: CameraTargetBounds(
+          LatLngBounds(
+            northeast: const LatLng(40.833619, -73.846932),
+            southwest: const LatLng(40.691811, -74.054667),
+          ),
         ),
         onMapCreated: (GoogleMapController controller) {
           _controller.complete(controller);
@@ -79,8 +70,7 @@ class MapState extends State<Map> {
             .map(
               (spot) => Marker(
                 markerId: MarkerId(spot.googlePlaceId),
-                position: LatLng(spot.coordinates.coordinates[1],
-                    spot.coordinates.coordinates[0]),
+                position: spot.coordinates,
               ),
             )
             .toSet(),

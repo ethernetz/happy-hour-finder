@@ -26,8 +26,8 @@ class SpotCard extends StatelessWidget {
     final availableMaps = await MapLauncher.installedMaps;
 
     await availableMaps.first.showDirections(
-      destination: Coords(
-          spot.coordinates.coordinates[1], spot.coordinates.coordinates[0]),
+      destination:
+          Coords(spot.coordinates.latitude, spot.coordinates.longitude),
       destinationTitle: spot.name,
       directionsMode: DirectionsMode.walking,
     );

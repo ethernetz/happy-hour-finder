@@ -3,24 +3,9 @@ import 'dart:convert';
 import 'package:app/env.dart';
 import 'package:app/google_place_details.dart';
 import 'package:app/google_place_details_cache.dart';
+import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:intl/intl.dart';
 import 'package:http/http.dart' as http;
-
-import 'dart:math';
-
-double haversineDistance(List<double> coord1, List<double> coord2) {
-  const R = 6371.0; // Radius of the Earth in kilometers
-  final dLat = (coord2[1] - coord1[1]) * (pi / 180);
-  final dLon = (coord2[0] - coord1[0]) * (pi / 180);
-  final a = sin(dLat / 2) * sin(dLat / 2) +
-      cos(coord1[1] * (pi / 180)) *
-          cos(coord2[1] * (pi / 180)) *
-          sin(dLon / 2) *
-          sin(dLon / 2);
-  final c = 2 * atan2(sqrt(a), sqrt(1 - a));
-  final distance = R * c;
-  return distance;
-}
 
 class Spot {
   final bool checkedForHappyHours;
@@ -29,7 +14,7 @@ class Spot {
   final String name;
   final String uniqueName;
   final String address;
-  final GeoJSONPoint coordinates;
+  final LatLng coordinates;
   final String googlePlaceId;
 
   // Cache variables
@@ -39,11 +24,6 @@ class Spot {
 
   //Google place cache variables
   String? photoUrl;
-
-  int getDistance(List<double> userCoordinates) {
-    return haversineDistance(userCoordinates,
-        [coordinates.coordinates[0], coordinates.coordinates[1]]).round();
-  }
 
   Spot({
     required this.checkedForHappyHours,
@@ -79,6 +59,8 @@ class Spot {
 
   // Function to convert JSON object to Spot instance
   factory Spot.fromJson(Map<String, dynamic> json) {
+    final coords = json['coordinates']['coordinates'] as List<dynamic>;
+
     return Spot(
       checkedForHappyHours: json['checkedForHappyHours'],
       happyHours: (json['happyHours'] as List<dynamic>)
@@ -88,9 +70,7 @@ class Spot {
       name: json['name'],
       uniqueName: json['uniqueName'],
       address: json['address'],
-      coordinates: GeoJSONPoint.fromJson(
-        Map<String, dynamic>.from(json['coordinates']),
-      ),
+      coordinates: LatLng(coords[1].toDouble(), coords[0].toDouble()),
       googlePlaceId: json['googlePlaceId'],
     );
   }
@@ -200,20 +180,5 @@ class HappyHour {
       deal: json['deal'],
       crossesMidnight: json['crossesMidnight'] ?? false,
     );
-  }
-}
-
-class GeoJSONPoint {
-  final String type;
-  final List<double> coordinates;
-
-  GeoJSONPoint({required this.type, required this.coordinates});
-
-  // Function to convert JSON object to GeoJSONPoint instance
-  factory GeoJSONPoint.fromJson(Map<String, dynamic> json) {
-    return GeoJSONPoint(
-        type: json['type'],
-        coordinates:
-            List<double>.from(json['coordinates'].map((x) => x.toDouble())));
   }
 }
