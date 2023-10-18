@@ -66,7 +66,8 @@ class MapState extends State<Map> {
         onMapCreated: (GoogleMapController controller) {
           _controller.complete(controller);
         },
-        markers: spots
+        markers: spots.values
+            .toList()
             .map(
               (spot) => Marker(
                 markerId: MarkerId(spot.googlePlaceId),

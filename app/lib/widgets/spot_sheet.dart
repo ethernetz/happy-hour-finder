@@ -14,11 +14,11 @@ class SpotSheet extends StatelessWidget {
         builder: (context, provider, child) {
       final spots = provider.latestSpotsSorted;
       return DraggableScrollableSheet(
-        initialChildSize: 0.5,
+        initialChildSize: 0.4,
         minChildSize: 0.1,
         maxChildSize: 1.0,
         snap: true,
-        snapSizes: const [0.1, 0.5, 1.0],
+        snapSizes: const [0.1, 0.4, 1.0],
         builder: (BuildContext context, ScrollController scrollController) {
           return Container(
             decoration: BoxDecoration(

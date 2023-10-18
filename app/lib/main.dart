@@ -18,7 +18,9 @@ Future<void> main() async {
     try {
       FirebaseFunctions.instance.useFunctionsEmulator("localhost", 5001);
     } catch (exception) {
-      print(exception);
+      if (kDebugMode) {
+        print(exception);
+      }
     }
   }
   runApp(const MyApp());
