@@ -2,7 +2,8 @@ import 'dart:async';
 import 'package:app/spot.dart';
 import 'package:cloud_functions/cloud_functions.dart';
 import 'package:flutter/foundation.dart';
-import 'package:google_maps_flutter/google_maps_flutter.dart';
+import 'package:flutter_map/flutter_map.dart';
+import 'package:latlong2/latlong.dart';
 
 class MapVisibleRegionPlacesProvider with ChangeNotifier {
   final Map<String, Spot> _allSpots = {}; // Changed to a map
@@ -24,8 +25,8 @@ class MapVisibleRegionPlacesProvider with ChangeNotifier {
         ),
       );
 
-      LatLng sw = newLocation.southwest;
-      LatLng ne = newLocation.northeast;
+      LatLng sw = newLocation.southWest;
+      LatLng ne = newLocation.northEast;
 
       List<List<double>> boxCoordinates = [
         [sw.longitude, sw.latitude],

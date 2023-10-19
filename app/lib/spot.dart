@@ -3,9 +3,9 @@ import 'dart:convert';
 import 'package:app/env.dart';
 import 'package:app/google_place_details.dart';
 import 'package:app/google_place_details_cache.dart';
-import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:intl/intl.dart';
 import 'package:http/http.dart' as http;
+import 'package:latlong2/latlong.dart';
 
 class Spot {
   final bool checkedForHappyHours;
