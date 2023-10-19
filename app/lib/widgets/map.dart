@@ -1,7 +1,9 @@
 import 'dart:async';
+import 'dart:ui';
 
 import 'package:app/get_location.dart';
 import 'package:app/providers/map_visible_region_places_provider.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter/material.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:provider/provider.dart';
@@ -13,7 +15,19 @@ class Map extends StatefulWidget {
   State<Map> createState() => MapState();
 }
 
+Future<Uint8List?> getBytesFromAsset(String path, int width) async {
+  ByteData data = await rootBundle.load(path);
+  Codec codec = await instantiateImageCodec(data.buffer.asUint8List(),
+      targetWidth: width);
+  FrameInfo fi = await codec.getNextFrame();
+  return (await fi.image.toByteData(format: ImageByteFormat.png))
+      ?.buffer
+      .asUint8List();
+}
+
 class MapState extends State<Map> {
+  BitmapDescriptor markerIcon = BitmapDescriptor.defaultMarker;
+
   Future<void> _onCameraMove(CameraPosition? position) async {
     final mapVisibleRegionProvider =
         Provider.of<MapVisibleRegionPlacesProvider>(context, listen: false);
@@ -26,6 +40,7 @@ class MapState extends State<Map> {
   void initState() {
     super.initState();
     setInitialLocation();
+    addCustomIcon();
   }
 
   setInitialLocation() async {
@@ -38,6 +53,14 @@ class MapState extends State<Map> {
     );
     await controller
         .animateCamera(CameraUpdate.newCameraPosition(cameraPosition));
+  }
+
+  addCustomIcon() async {
+    final Uint8List markerBytes =
+        (await getBytesFromAsset('assets/spot_open_marker.png', 150))!;
+    setState(() {
+      markerIcon = BitmapDescriptor.fromBytes(markerBytes);
+    });
   }
 
   final Completer<GoogleMapController> _controller =
@@ -72,6 +95,7 @@ class MapState extends State<Map> {
               (spot) => Marker(
                 markerId: MarkerId(spot.googlePlaceId),
                 position: spot.coordinates,
+                icon: markerIcon,
               ),
             )
             .toSet(),
