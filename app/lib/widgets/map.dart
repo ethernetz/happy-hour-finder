@@ -5,8 +5,10 @@ import 'package:app/get_location.dart';
 import 'package:app/providers/map_visible_region_places_provider.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_map_location_marker/flutter_map_location_marker.dart';
 import 'package:provider/provider.dart';
 import 'package:flutter_map/flutter_map.dart';
+import 'package:latlong2/latlong.dart';
 
 class Map extends StatefulWidget {
   const Map({super.key});
@@ -51,16 +53,21 @@ class MapState extends State<Map> {
       final spots = provider.allSpots;
       return FlutterMap(
         mapController: MapController(),
-        options: MapOptions(),
+        options: MapOptions(
+          initialCenter: const LatLng(40.776676, -73.971321),
+          initialZoom: 8,
+        ),
         children: [
           TileLayer(
             urlTemplate:
-                "https://api.mapbox.com/styles/v1/eyeseediagnostics/ckm6fhoeuc9f617o5ymjl9152/tiles/256/{z}/{x}/{y}@2x?access_token=pk.eyJ1IjoiZXllc2VlZGlhZ25vc3RpY3MiLCJhIjoiY2ttNmZkN3pvMG5wczJvcHIzNXM0dXMydiJ9.OHEYuFFxLxK0fzFlqPU7WQ",
-            additionalOptions: {
+                'https://api.mapbox.com/styles/v1/ethernetz/clnxlcfzp002b01r73s4h3g2b/tiles/256/{z}/{x}/{y}@2x?access_token=pk.eyJ1IjoiZXRoZXJuZXR6IiwiYSI6ImNsbTJmaGF3eTM4ODczc3M1NGoyczMyNWcifQ.5uckbBL_Z_9OYIaS7hnAuA',
+            additionalOptions: const {
               'accessToken':
-                  'pk.eyJ1IjoiZXllc2VlZGlhZ25vc3RpY3MiLCJhIjoiY2ttNmZkN3pvMG5wczJvcHIzNXM0dXMydiJ9.OHEYuFFxLxK0fzFlqPU7WQ'
+                  'pk.eyJ1IjoiZXRoZXJuZXR6IiwiYSI6ImNsbTJmaGF3eTM4ODczc3M1NGoyczMyNWcifQ.5uckbBL_Z_9OYIaS7hnAuA',
+              'id': 'mapbox.mapbox-streets-v8',
             },
           ),
+          CurrentLocationLayer(),
         ],
       );
     });
