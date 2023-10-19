@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'dart:ui';
 
+import 'package:app/env.dart';
 import 'package:app/get_location.dart';
 import 'package:app/providers/map_visible_region_places_provider.dart';
 import 'package:flutter/services.dart';
@@ -53,17 +54,16 @@ class MapState extends State<Map> {
       final spots = provider.allSpots;
       return FlutterMap(
         mapController: MapController(),
-        options: MapOptions(
-          initialCenter: const LatLng(40.776676, -73.971321),
+        options: const MapOptions(
+          initialCenter: LatLng(40.776676, -73.971321),
           initialZoom: 8,
         ),
         children: [
           TileLayer(
             urlTemplate:
-                'https://api.mapbox.com/styles/v1/ethernetz/clnxlcfzp002b01r73s4h3g2b/tiles/256/{z}/{x}/{y}@2x?access_token=pk.eyJ1IjoiZXRoZXJuZXR6IiwiYSI6ImNsbTJmaGF3eTM4ODczc3M1NGoyczMyNWcifQ.5uckbBL_Z_9OYIaS7hnAuA',
-            additionalOptions: const {
-              'accessToken':
-                  'pk.eyJ1IjoiZXRoZXJuZXR6IiwiYSI6ImNsbTJmaGF3eTM4ODczc3M1NGoyczMyNWcifQ.5uckbBL_Z_9OYIaS7hnAuA',
+                'https://api.mapbox.com/styles/v1/ethernetz/clnxlcfzp002b01r73s4h3g2b/tiles/256/{z}/{x}/{y}@2x?access_token=${Env.mapboxAPIKey}',
+            additionalOptions: {
+              'accessToken': '${Env.mapboxAPIKey}',
               'id': 'mapbox.mapbox-streets-v8',
             },
           ),
