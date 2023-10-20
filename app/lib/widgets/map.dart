@@ -63,7 +63,7 @@ class MapState extends State<Map> {
         onPositionChanged: (position, hasGesture) {
           context
               .read<MapVisibleRegionPlacesProvider>()
-              .updateLocation(position.bounds!);
+              .handleCameraPositionChanged(position.bounds!);
         },
         center: const LatLng(40.776676, -73.971321),
         zoom: 12,

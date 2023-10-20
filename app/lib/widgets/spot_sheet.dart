@@ -12,7 +12,7 @@ class SpotSheet extends StatelessWidget {
   Widget build(BuildContext context) {
     return Consumer<MapVisibleRegionPlacesProvider>(
         builder: (context, provider, child) {
-      final spots = provider.latestSpotsSorted;
+      final spots = provider.spotsInCamera;
       return DraggableScrollableSheet(
         initialChildSize: 0.4,
         minChildSize: 0.1,
