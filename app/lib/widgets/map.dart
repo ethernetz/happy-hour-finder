@@ -56,16 +56,24 @@ class MapState extends State<Map> {
       return FlutterMap(
         mapController: MapController(),
         options: MapOptions(
-          initialCenter: const LatLng(40.776676, -73.971321),
-          initialZoom: 14,
+          // initialCenter: const LatLng(40.776676, -73.971321),
+          // initialZoom: 14,
           onPositionChanged: (position, hasGesture) {
             provider.updateLocation(position.bounds!);
           },
-          cameraConstraint: CameraConstraint.containCenter(
-              bounds: LatLngBounds(
+          // cameraConstraint: CameraConstraint.containCenter(
+          //     bounds: LatLngBounds(
+          //   const LatLng(40.821669, -74.016571),
+          //   const LatLng(40.697885, -73.909383),
+          // )),
+
+          center: const LatLng(40.776676, -73.971321),
+          zoom: 12,
+          minZoom: 12,
+          bounds: LatLngBounds(
             const LatLng(40.821669, -74.016571),
             const LatLng(40.697885, -73.909383),
-          )),
+          ),
         ),
         children: [
           TileLayer(
@@ -78,15 +86,33 @@ class MapState extends State<Map> {
           ),
           MarkerClusterLayerWidget(
             options: MarkerClusterLayerOptions(
-              maxClusterRadius: 45,
-              size: const Size(40, 40),
-              alignment: Alignment.center,
+              maxClusterRadius: 25,
+              computeSize: (markers) {
+                double minDiameter = 20.0;
+                double maxDiameter = 40.0;
+
+                double diameter;
+                int markerCount = markers.length;
+
+                if (markerCount >= 15) {
+                  diameter = maxDiameter;
+                } else if (markerCount <= 0) {
+                  diameter = minDiameter;
+                } else {
+                  double range = maxDiameter - minDiameter;
+                  diameter = minDiameter + (range * (markerCount / 15.0));
+                }
+
+                return Size(diameter, diameter);
+              },
+
+              // alignment: Alignment.center,
               markers: spots.values.map((spot) {
                 return Marker(
                   width: 40,
                   height: 40,
                   point: spot.coordinates,
-                  child: IconButton(
+                  builder: (context) => IconButton(
                     icon: const Icon(Icons.location_on),
                     onPressed: () {},
                   ),
@@ -95,12 +121,13 @@ class MapState extends State<Map> {
               builder: (context, markers) {
                 return Container(
                   decoration: BoxDecoration(
-                      borderRadius: BorderRadius.circular(20),
-                      color: Colors.blue),
+                    shape: BoxShape.circle,
+                    color: Theme.of(context).colorScheme.secondary,
+                  ),
                   child: Center(
                     child: Text(
                       markers.length.toString(),
-                      style: const TextStyle(color: Colors.white),
+                      style: const TextStyle(color: Colors.black),
                     ),
                   ),
                 );

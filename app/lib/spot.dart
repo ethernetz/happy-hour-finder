@@ -6,6 +6,7 @@ import 'package:app/google_place_details_cache.dart';
 import 'package:intl/intl.dart';
 import 'package:http/http.dart' as http;
 import 'package:latlong2/latlong.dart';
+import 'package:flutter/foundation.dart';
 
 class Spot {
   final bool checkedForHappyHours;
@@ -39,21 +40,40 @@ class Spot {
   }
 
   Future<void> fetchGooglePlaceDetails() async {
-    if (googlePlaceDetailsCache.containsKey(googlePlaceId)) {
-      photoUrl = googlePlaceDetailsCache[googlePlaceId]!.photoUrl;
-    } else {
-      final url =
-          "https://maps.googleapis.com/maps/api/place/details/json?placeid=$googlePlaceId&fields=photo&key=${Env.googleMapsAPIKey}";
-      final response = await http.get(Uri.parse(url));
-      final jsonData = jsonDecode(response.body);
-      final String fetchedPhotoUrl =
-          'https://maps.googleapis.com/maps/api/place/photo?maxwidth=400&photoreference=${jsonData["result"]["photos"][0]["photo_reference"]}&key=${Env.googleMapsAPIKey}';
+    try {
+      if (googlePlaceDetailsCache.containsKey(googlePlaceId)) {
+        photoUrl = googlePlaceDetailsCache[googlePlaceId]!.photoUrl;
+      } else {
+        final url =
+            "https://maps.googleapis.com/maps/api/place/details/json?placeid=$googlePlaceId&fields=photo&key=${Env.googleMapsAPIKey}";
+        final response = await http.get(Uri.parse(url));
 
-      photoUrl = fetchedPhotoUrl;
+        if (response.statusCode != 200) {
+          throw Exception(
+              "HTTP request error, status code: ${response.statusCode}");
+        }
 
-      // Store in the cache
-      googlePlaceDetailsCache[googlePlaceId] =
-          GooglePlaceDetails(photoUrl: fetchedPhotoUrl);
+        final jsonData = jsonDecode(response.body);
+
+        if (jsonData['result'] == null ||
+            jsonData["result"]["photos"] == null ||
+            jsonData["result"]["photos"].isEmpty) {
+          throw Exception("Invalid data structure in API response.");
+        }
+
+        final String fetchedPhotoUrl =
+            'https://maps.googleapis.com/maps/api/place/photo?maxwidth=400&photoreference=${jsonData["result"]["photos"][0]["photo_reference"]}&key=${Env.googleMapsAPIKey}';
+
+        photoUrl = fetchedPhotoUrl;
+
+        // Store in the cache
+        googlePlaceDetailsCache[googlePlaceId] =
+            GooglePlaceDetails(photoUrl: fetchedPhotoUrl);
+      }
+    } catch (e) {
+      if (kDebugMode) {
+        print(e);
+      }
     }
   }
 
