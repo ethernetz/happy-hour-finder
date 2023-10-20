@@ -50,41 +50,42 @@ class MapState extends State<Map> {
 
   @override
   Widget build(BuildContext context) {
-    return Consumer<MapVisibleRegionPlacesProvider>(
-        builder: (context, provider, child) {
-      final spots = provider.allSpots;
-      return FlutterMap(
-        mapController: MapController(),
-        options: MapOptions(
-          // initialCenter: const LatLng(40.776676, -73.971321),
-          // initialZoom: 14,
-          onPositionChanged: (position, hasGesture) {
-            provider.updateLocation(position.bounds!);
-          },
-          // cameraConstraint: CameraConstraint.containCenter(
-          //     bounds: LatLngBounds(
-          //   const LatLng(40.821669, -74.016571),
-          //   const LatLng(40.697885, -73.909383),
-          // )),
-
-          center: const LatLng(40.776676, -73.971321),
-          zoom: 12,
-          minZoom: 12,
-          bounds: LatLngBounds(
-            const LatLng(40.821669, -74.016571),
-            const LatLng(40.697885, -73.909383),
-          ),
+    return FlutterMap(
+      mapController: MapController(),
+      options: MapOptions(
+        // initialCenter: const LatLng(40.776676, -73.971321),
+        // initialZoom: 14,
+        // cameraConstraint: CameraConstraint.containCenter(
+        //     bounds: LatLngBounds(
+        //   const LatLng(40.821669, -74.016571),
+        //   const LatLng(40.697885, -73.909383),
+        // )),
+        onPositionChanged: (position, hasGesture) {
+          context
+              .read<MapVisibleRegionPlacesProvider>()
+              .updateLocation(position.bounds!);
+        },
+        center: const LatLng(40.776676, -73.971321),
+        zoom: 12,
+        minZoom: 12,
+        bounds: LatLngBounds(
+          const LatLng(40.821669, -74.016571),
+          const LatLng(40.697885, -73.909383),
         ),
-        children: [
-          TileLayer(
-            urlTemplate:
-                'https://api.mapbox.com/styles/v1/ethernetz/clnxlcfzp002b01r73s4h3g2b/tiles/256/{z}/{x}/{y}@2x?access_token=${Env.mapboxAPIKey}',
-            additionalOptions: {
-              'accessToken': Env.mapboxAPIKey,
-              'id': 'mapbox.mapbox-streets-v8',
-            },
-          ),
-          MarkerClusterLayerWidget(
+      ),
+      children: [
+        TileLayer(
+          urlTemplate:
+              'https://api.mapbox.com/styles/v1/ethernetz/clnxlcfzp002b01r73s4h3g2b/tiles/256/{z}/{x}/{y}@2x?access_token=${Env.mapboxAPIKey}',
+          additionalOptions: {
+            'accessToken': Env.mapboxAPIKey,
+            'id': 'mapbox.mapbox-streets-v8',
+          },
+        ),
+        Consumer<MapVisibleRegionPlacesProvider>(
+            builder: (context, provider, child) {
+          final spots = provider.allSpots;
+          return MarkerClusterLayerWidget(
             options: MarkerClusterLayerOptions(
               maxClusterRadius: 25,
               computeSize: (markers) {
@@ -105,8 +106,6 @@ class MapState extends State<Map> {
 
                 return Size(diameter, diameter);
               },
-
-              // alignment: Alignment.center,
               markers: spots.values.map((spot) {
                 return Marker(
                   width: 40,
@@ -133,10 +132,10 @@ class MapState extends State<Map> {
                 );
               },
             ),
-          ),
-          CurrentLocationLayer(),
-        ],
-      );
-    });
+          );
+        }),
+        CurrentLocationLayer(),
+      ],
+    );
   }
 }
