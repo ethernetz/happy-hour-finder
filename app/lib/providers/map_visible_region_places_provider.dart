@@ -10,10 +10,12 @@ class MapVisibleRegionPlacesProvider with ChangeNotifier {
   List<String> _spotIdsInCamera = [];
   Timer? _getNewSpotsInCameraDebounce;
   Timer? _updateSpotIdsInCameraDebounce;
+  String _selectedSpotId = '';
 
   Map<String, Spot> get allSpots => _allSpots;
   List<Spot> get spotsInCamera =>
       _spotIdsInCamera.map((spotId) => _allSpots[spotId]!).toList();
+  String get selectedSpotId => _selectedSpotId;
 
   Future<void> handleCameraPositionChanged(LatLngBounds newLocation) async {
     _getNewSpotsInCameraDebounce?.cancel();
@@ -38,6 +40,11 @@ class MapVisibleRegionPlacesProvider with ChangeNotifier {
         notifyListeners();
       },
     );
+  }
+
+  void handleSpotSelected(String spotId) {
+    _selectedSpotId = spotId;
+    notifyListeners();
   }
 }
 

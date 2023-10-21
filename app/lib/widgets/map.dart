@@ -38,14 +38,7 @@ class MapState extends State<Map> {
 
   setInitialLocation() async {
     final location = await getLocation();
-    // if (location == null) return;
-    // final controller = await _controller.future;
-    // final cameraPosition = CameraPosition(
-    //   target: location,
-    //   zoom: 14,
-    // );
-    // await controller
-    //     .animateCamera(CameraUpdate.newCameraPosition(cameraPosition));
+    /** TODO */
   }
 
   @override
@@ -81,12 +74,18 @@ class MapState extends State<Map> {
             'accessToken': Env.mapboxAPIKey,
             'id': 'mapbox.mapbox-streets-v8',
           },
+          fallbackUrl: 'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
         ),
         Consumer<MapVisibleRegionPlacesProvider>(
             builder: (context, provider, child) {
           final spots = provider.allSpots;
           return MarkerClusterLayerWidget(
             options: MarkerClusterLayerOptions(
+              onMarkerTap: (marker) {
+                context
+                    .read<MapVisibleRegionPlacesProvider>()
+                    .handleSpotSelected((marker.key as ValueKey).value);
+              },
               maxClusterRadius: 25,
               computeSize: (markers) {
                 double minDiameter = 20.0;
@@ -108,12 +107,15 @@ class MapState extends State<Map> {
               },
               markers: spots.values.map((spot) {
                 return Marker(
+                  key: Key(spot.googlePlaceId),
                   width: 40,
                   height: 40,
                   point: spot.coordinates,
-                  builder: (context) => IconButton(
-                    icon: const Icon(Icons.location_on),
-                    onPressed: () {},
+                  builder: (context) => Icon(
+                    Icons.location_on,
+                    color: provider.selectedSpotId == spot.googlePlaceId
+                        ? Colors.amber
+                        : Colors.white,
                   ),
                 );
               }).toList(),
@@ -134,7 +136,9 @@ class MapState extends State<Map> {
             ),
           );
         }),
-        CurrentLocationLayer(),
+        IgnorePointer(
+          child: CurrentLocationLayer(),
+        ),
       ],
     );
   }
