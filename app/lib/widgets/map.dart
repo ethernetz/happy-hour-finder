@@ -30,21 +30,20 @@ Future<Uint8List?> getBytesFromAsset(String path, int width) async {
 }
 
 class MapState extends State<Map> {
-  @override
-  void initState() {
-    super.initState();
-    setInitialLocation();
-  }
+  final mapController = MapController();
 
   setInitialLocation() async {
     final location = await getLocation();
-    /** TODO */
+    if (location == null) {
+      return;
+    }
+    mapController.move(location, 16);
   }
 
   @override
   Widget build(BuildContext context) {
     return FlutterMap(
-      mapController: MapController(),
+      mapController: mapController,
       options: MapOptions(
         // initialCenter: const LatLng(40.776676, -73.971321),
         // initialZoom: 14,
@@ -53,6 +52,9 @@ class MapState extends State<Map> {
         //   const LatLng(40.821669, -74.016571),
         //   const LatLng(40.697885, -73.909383),
         // )),
+        onMapReady: () {
+          setInitialLocation();
+        },
         onPositionChanged: (position, hasGesture) {
           context
               .read<MapVisibleRegionPlacesProvider>()
