@@ -1,5 +1,5 @@
 import 'package:app/widgets/map.dart';
-import 'package:app/widgets/spot_sheet.dart';
+import 'package:app/widgets/spots_sheet.dart';
 import 'package:flutter/material.dart';
 
 class HomePage extends StatelessWidget {
@@ -11,7 +11,7 @@ class HomePage extends StatelessWidget {
       body: Stack(
         children: [
           Map(),
-          SpotSheet(),
+          SpotsSheet(),
         ],
       ),
     );

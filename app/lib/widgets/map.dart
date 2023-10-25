@@ -110,16 +110,35 @@ class MapState extends State<Map> {
               markers: spots.values.map((spot) {
                 return Marker(
                   key: Key(spot.googlePlaceId),
-                  width: 40,
-                  height: 40,
+                  width:
+                      80, // You may adjust the width based on your layout requirements
+                  height:
+                      60, // You may adjust the height based on your layout requirements
                   point: spot.coordinates,
-                  builder: (context) => Icon(
-                    Icons.location_on,
-                    color: provider.selectedSpotId == spot.googlePlaceId
-                        ? Colors.amber
-                        : Colors.white,
+                  builder: (context) => Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Text(
+                        spot.name,
+                        maxLines: 2, // Maximum of 2 lines
+                        overflow:
+                            TextOverflow.ellipsis, // Ellipsis for overflow
+                        style: TextStyle(
+                          fontSize: 12,
+                          color: Colors.white,
+                        ),
+                        textAlign: TextAlign.center,
+                      ),
+                      Icon(
+                        Icons.location_on,
+                        color: provider.selectedSpotId == spot.googlePlaceId
+                            ? Colors.amber
+                            : Colors.white,
+                      ),
+                    ],
                   ),
                 );
+
               }).toList(),
               builder: (context, markers) {
                 return Container(

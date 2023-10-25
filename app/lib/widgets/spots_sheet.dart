@@ -3,8 +3,8 @@ import 'package:app/spot_card.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
-class SpotSheet extends StatelessWidget {
-  const SpotSheet({
+class SpotsSheet extends StatelessWidget {
+  const SpotsSheet({
     super.key,
   });
 
@@ -14,11 +14,11 @@ class SpotSheet extends StatelessWidget {
         builder: (context, provider, child) {
       final spots = provider.spotsInCamera;
       return DraggableScrollableSheet(
-        initialChildSize: 0.4,
+        initialChildSize: 0.33,
         minChildSize: 0.1,
         maxChildSize: 1.0,
         snap: true,
-        snapSizes: const [0.1, 0.4, 1.0],
+        snapSizes: const [0.1, 0.33, 1.0],
         builder: (BuildContext context, ScrollController scrollController) {
           return Container(
             decoration: BoxDecoration(
