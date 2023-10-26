@@ -26,13 +26,17 @@ class _SelectedSpotSheetState extends State<SelectedSpotSheet> {
         WidgetsBinding.instance.addPostFrameCallback((_) {
           if (selectedSpotId != null &&
               selectedSpotId != previousSelectedSpotId) {
-            _draggableScrollableController.animateTo(0.33,
-                duration: const Duration(milliseconds: 200),
-                curve: Curves.easeOut);
+            _draggableScrollableController.animateTo(
+              0.33,
+              duration: const Duration(milliseconds: 200),
+              curve: Curves.easeOut,
+            );
           } else if (selectedSpotId == null && previousSelectedSpotId != null) {
-            _draggableScrollableController.animateTo(0,
-                duration: const Duration(milliseconds: 200),
-                curve: Curves.easeOut);
+            _draggableScrollableController.animateTo(
+              0,
+              duration: const Duration(milliseconds: 200),
+              curve: Curves.easeOut,
+            );
           }
           previousSelectedSpotId = selectedSpotId;
         });
@@ -40,9 +44,9 @@ class _SelectedSpotSheetState extends State<SelectedSpotSheet> {
             controller: _draggableScrollableController,
             initialChildSize: 0,
             minChildSize: 0,
-            maxChildSize: 1.0,
+            maxChildSize: 0.95,
             snap: true,
-            snapSizes: const [0, 0.33, 1.0],
+            snapSizes: const [0, 0.33, 0.95],
             builder: (BuildContext context, ScrollController scrollController) {
               return Container(
                 decoration: BoxDecoration(

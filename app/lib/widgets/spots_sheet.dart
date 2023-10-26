@@ -16,25 +16,41 @@ class _SpotsSheetState extends State<SpotsSheet> {
   final DraggableScrollableController _draggableScrollableController =
       DraggableScrollableController();
 
+  double previousDraggableScrollableSize = 0.33;
+  String? previousSelectedSpotId;
+
   @override
   Widget build(BuildContext context) {
     return Selector<MapVisibleRegionPlacesProvider, String?>(
         selector: (_, provider) => provider.selectedSpotId,
         builder: (context, selectedSpotId, child) {
           WidgetsBinding.instance.addPostFrameCallback((_) {
-            if (selectedSpotId != null) {
-              _draggableScrollableController.animateTo(0.33,
-                  duration: const Duration(milliseconds: 200),
-                  curve: Curves.easeOut);
+            if (selectedSpotId != null &&
+                selectedSpotId != previousSelectedSpotId) {
+              previousDraggableScrollableSize =
+                  _draggableScrollableController.size;
+              _draggableScrollableController.animateTo(
+                0.33,
+                duration: const Duration(milliseconds: 200),
+                curve: Curves.easeOut,
+              );
+            } else if (selectedSpotId == null &&
+                previousSelectedSpotId != null) {
+              _draggableScrollableController.animateTo(
+                previousDraggableScrollableSize,
+                duration: const Duration(milliseconds: 200),
+                curve: Curves.easeOut,
+              );
             }
+            previousSelectedSpotId = selectedSpotId;
           });
           return DraggableScrollableSheet(
             controller: _draggableScrollableController,
             initialChildSize: 0.33,
             minChildSize: 0.1,
-            maxChildSize: 1.0,
+            maxChildSize: 0.95,
             snap: true,
-            snapSizes: const [0.1, 0.33, 1.0],
+            snapSizes: const [0.1, 0.33, 0.95],
             builder: (BuildContext context, ScrollController scrollController) {
               return Container(
                 decoration: BoxDecoration(
