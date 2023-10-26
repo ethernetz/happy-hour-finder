@@ -1,4 +1,4 @@
-import 'package:app/providers/map_visible_region_places_provider.dart';
+import 'package:app/providers/spots_provider.dart';
 import 'package:app/widgets/spot_card.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
@@ -21,7 +21,7 @@ class _SpotsSheetState extends State<SpotsSheet> {
 
   @override
   Widget build(BuildContext context) {
-    return Selector<MapVisibleRegionPlacesProvider, String?>(
+    return Selector<SpotsProvider, String?>(
         selector: (_, provider) => provider.selectedSpotId,
         builder: (context, selectedSpotId, child) {
           WidgetsBinding.instance.addPostFrameCallback((_) {
@@ -60,7 +60,7 @@ class _SpotsSheetState extends State<SpotsSheet> {
                     topRight: Radius.circular(16.0),
                   ),
                 ),
-                child: Consumer<MapVisibleRegionPlacesProvider>(
+                child: Consumer<SpotsProvider>(
                     builder: (context, provider, child) {
                   final spots = provider.spotsInCamera;
                   return ListView(

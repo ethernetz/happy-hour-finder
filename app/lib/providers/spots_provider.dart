@@ -5,7 +5,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter_map/flutter_map.dart';
 import 'package:latlong2/latlong.dart';
 
-class MapVisibleRegionPlacesProvider with ChangeNotifier {
+class SpotsProvider with ChangeNotifier {
   final Map<String, Spot> _allSpots = {}; // Changed to a map
   List<String> _spotIdsInCamera = [];
   Timer? _getNewSpotsInCameraDebounce;

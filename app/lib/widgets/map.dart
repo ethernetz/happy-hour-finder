@@ -3,7 +3,7 @@ import 'dart:ui';
 
 import 'package:app/env.dart';
 import 'package:app/get_location.dart';
-import 'package:app/providers/map_visible_region_places_provider.dart';
+import 'package:app/providers/spots_provider.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_map_animations/flutter_map_animations.dart';
@@ -54,7 +54,7 @@ class MapState extends State<Map> with TickerProviderStateMixin {
 
   @override
   Widget build(BuildContext context) {
-    return Selector<MapVisibleRegionPlacesProvider, String?>(
+    return Selector<SpotsProvider, String?>(
         selector: (_, provider) => provider.selectedSpotId,
         builder: (context, selectedSpotId, child) {
           WidgetsBinding.instance.addPostFrameCallback((_) {
@@ -62,7 +62,7 @@ class MapState extends State<Map> with TickerProviderStateMixin {
                 selectedSpotId != previousSelectedSpotId) {
               mapController.animateTo(
                 dest: context
-                    .read<MapVisibleRegionPlacesProvider>()
+                    .read<SpotsProvider>()
                     .allSpots[selectedSpotId]!
                     .coordinates,
                 zoom: 17,
@@ -85,7 +85,7 @@ class MapState extends State<Map> with TickerProviderStateMixin {
               },
               onPositionChanged: (position, hasGesture) {
                 context
-                    .read<MapVisibleRegionPlacesProvider>()
+                    .read<SpotsProvider>()
                     .handleCameraPositionChanged(position.bounds!);
               },
               center: const LatLng(40.776676, -73.971321),
@@ -106,14 +106,13 @@ class MapState extends State<Map> with TickerProviderStateMixin {
                 },
                 fallbackUrl: 'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
               ),
-              Consumer<MapVisibleRegionPlacesProvider>(
-                  builder: (context, provider, child) {
+              Consumer<SpotsProvider>(builder: (context, provider, child) {
                 final spots = provider.allSpots;
                 return MarkerClusterLayerWidget(
                   options: MarkerClusterLayerOptions(
                     onMarkerTap: (marker) {
                       context
-                          .read<MapVisibleRegionPlacesProvider>()
+                          .read<SpotsProvider>()
                           .handleSpotSelected((marker.key as ValueKey).value);
                     },
                     maxClusterRadius: 25,

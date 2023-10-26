@@ -1,4 +1,4 @@
-import 'package:app/providers/map_visible_region_places_provider.dart';
+import 'package:app/providers/spots_provider.dart';
 import 'package:app/spot.dart';
 import 'package:app/string_extension.dart';
 import 'package:flutter/cupertino.dart';
@@ -116,9 +116,7 @@ class SelectedSpotCard extends StatelessWidget {
                       color: Colors.white,
                     ),
                     onPressed: () {
-                      context
-                          .read<MapVisibleRegionPlacesProvider>()
-                          .handleUnselectSpot();
+                      context.read<SpotsProvider>().handleUnselectSpot();
                     },
                   ),
                 ],

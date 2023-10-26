@@ -1,4 +1,4 @@
-import 'package:app/providers/map_visible_region_places_provider.dart';
+import 'package:app/providers/spots_provider.dart';
 import 'package:app/spot.dart';
 import 'package:app/string_extension.dart';
 import 'package:flutter/cupertino.dart';
@@ -77,9 +77,7 @@ class SpotCard extends StatelessWidget {
           CupertinoButton(
         padding: const EdgeInsets.all(16.0),
         onPressed: () {
-          context
-              .read<MapVisibleRegionPlacesProvider>()
-              .handleSpotSelected(spot.googlePlaceId);
+          context.read<SpotsProvider>().handleSpotSelected(spot.googlePlaceId);
         },
         color: Colors.black26,
         child: Align(

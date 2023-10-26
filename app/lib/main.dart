@@ -7,7 +7,7 @@ import 'firebase_options.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import './screens/home_page.dart';
-import 'providers/map_visible_region_places_provider.dart';
+import 'providers/spots_provider.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -31,7 +31,7 @@ class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return ChangeNotifierProvider(
-      create: (context) => MapVisibleRegionPlacesProvider(),
+      create: (context) => SpotsProvider(),
       child: MaterialApp(
         theme: ThemeData(
           brightness: Brightness.dark,
