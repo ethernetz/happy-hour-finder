@@ -2,6 +2,7 @@ import 'package:app/providers/spots_provider.dart';
 import 'package:app/widgets/spot_card.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:flutter_spinkit/flutter_spinkit.dart';
 
 class SpotsSheet extends StatefulWidget {
   const SpotsSheet({
@@ -79,18 +80,47 @@ class _SpotsSheetState extends State<SpotsSheet> {
                           ),
                         ),
                       ),
-                      // List items
-                      ...spots.map(
-                        (spot) => Padding(
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 10,
-                            vertical: 5,
+                      if (spots == null)
+                        Container(
+                          padding: const EdgeInsets.only(top: 30),
+                          child: const Column(
+                            mainAxisAlignment:
+                                MainAxisAlignment.center, // Center vertically
+                            crossAxisAlignment: CrossAxisAlignment
+                                .center, // Center horizontally
+                            children: [
+                              SpinKitWave(
+                                color: Colors.white,
+                                type: SpinKitWaveType.start,
+                                duration: Duration(milliseconds: 1000),
+                                size: 40,
+                              ),
+                              SizedBox(
+                                height: 10,
+                              ), // Add a small gap between spinner and text
+                              Text(
+                                'Finding your happy hours',
+                                style: TextStyle(
+                                  color: Colors.white,
+                                  fontSize: 16,
+                                ),
+                              ),
+                            ],
                           ),
-                          child: SpotCard(
-                            spot: spot,
+                        )
+                      else
+                        // List items
+                        ...spots.map(
+                          (spot) => Padding(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 10,
+                              vertical: 5,
+                            ),
+                            child: SpotCard(
+                              spot: spot,
+                            ),
                           ),
                         ),
-                      ),
                     ],
                   );
                 }),

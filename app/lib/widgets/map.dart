@@ -63,7 +63,7 @@ class MapState extends State<Map> with TickerProviderStateMixin {
               mapController.animateTo(
                 dest: context
                     .read<SpotsProvider>()
-                    .allSpots[selectedSpotId]!
+                    .allSpots![selectedSpotId]!
                     .coordinates,
                 zoom: 17,
               );
@@ -108,6 +108,9 @@ class MapState extends State<Map> with TickerProviderStateMixin {
               ),
               Consumer<SpotsProvider>(builder: (context, provider, child) {
                 final spots = provider.allSpots;
+                if (spots == null) {
+                  return Container();
+                }
                 return MarkerClusterLayerWidget(
                   options: MarkerClusterLayerOptions(
                     onMarkerTap: (marker) {

@@ -19,6 +19,16 @@ class _SelectedSpotSheetState extends State<SelectedSpotSheet> {
   String? previousSelectedSpotId;
 
   @override
+  void initState() {
+    super.initState();
+    _draggableScrollableController.addListener(() {
+      if (_draggableScrollableController.size == 0.0) {
+        context.read<SpotsProvider>().handleUnselectSpot();
+      }
+    });
+  }
+
+  @override
   Widget build(BuildContext context) {
     return Selector<SpotsProvider, String?>(
       selector: (_, provider) => provider.selectedSpotId,
@@ -74,7 +84,7 @@ class _SelectedSpotSheetState extends State<SelectedSpotSheet> {
                     Consumer<SpotsProvider>(
                       builder: (context, provider, _) {
                         final spot = provider.selectedSpot ??
-                            provider.allSpots[previousSelectedSpotId];
+                            provider.allSpots?[previousSelectedSpotId];
                         if (spot == null) return Container();
                         return SelectedSpotCard(
                           spot: spot,

@@ -6,17 +6,28 @@ import 'package:flutter_map/flutter_map.dart';
 import 'package:latlong2/latlong.dart';
 
 class SpotsProvider with ChangeNotifier {
-  final Map<String, Spot> _allSpots = {}; // Changed to a map
+  Map<String, Spot>? _allSpots; // Changed to a map
   List<String> _spotIdsInCamera = [];
   Timer? _getNewSpotsInCameraDebounce;
   Timer? _updateSpotIdsInCameraDebounce;
   String? _selectedSpotId;
 
-  Map<String, Spot> get allSpots => _allSpots;
-  List<Spot> get spotsInCamera =>
-      _spotIdsInCamera.map((spotId) => _allSpots[spotId]!).toList();
+  Map<String, Spot>? get allSpots => _allSpots;
+  List<Spot>? get spotsInCamera {
+    if (_allSpots == null) return null;
+    return _spotIdsInCamera.map((spotId) => _allSpots![spotId]!).toList();
+  }
+
   String? get selectedSpotId => _selectedSpotId;
-  Spot? get selectedSpot => _allSpots[_selectedSpotId];
+  Spot? get selectedSpot => _allSpots?[_selectedSpotId];
+
+  void _addSpot(Spot spot) {
+    if (_allSpots == null) {
+      _allSpots = {spot.googlePlaceId: spot};
+    } else {
+      _allSpots![spot.googlePlaceId] = spot;
+    }
+  }
 
   Future<void> handleCameraPositionChanged(LatLngBounds newLocation) async {
     _getNewSpotsInCameraDebounce?.cancel();
@@ -25,10 +36,11 @@ class SpotsProvider with ChangeNotifier {
       final newSpots = await getNewSpotsInCamera(newLocation);
       if (newSpots == null) return;
       for (var spot in newSpots) {
-        _allSpots[spot.googlePlaceId] = spot;
+        _addSpot(spot);
       }
-      _spotIdsInCamera =
-          getUpdatedSpotIdsInCamera(newLocation, _allSpots.values.toList());
+      final allSpotValues = _allSpots?.values.toList();
+      if (allSpotValues == null) return;
+      _spotIdsInCamera = getUpdatedSpotIdsInCamera(newLocation, allSpotValues);
       notifyListeners();
     });
 
@@ -36,8 +48,10 @@ class SpotsProvider with ChangeNotifier {
     _updateSpotIdsInCameraDebounce = Timer(
       const Duration(milliseconds: 2),
       () {
+        final allSpotValues = _allSpots?.values.toList();
+        if (allSpotValues == null) return;
         _spotIdsInCamera =
-            getUpdatedSpotIdsInCamera(newLocation, _allSpots.values.toList());
+            getUpdatedSpotIdsInCamera(newLocation, allSpotValues);
         notifyListeners();
       },
     );
