@@ -1,4 +1,5 @@
 import 'package:app/widgets/map.dart';
+import 'package:app/widgets/selected_spot_sheet.dart';
 import 'package:app/widgets/spots_sheet.dart';
 import 'package:flutter/material.dart';
 
@@ -12,6 +13,7 @@ class HomePage extends StatelessWidget {
         children: [
           Map(),
           SpotsSheet(),
+          SelectedSpotSheet(),
         ],
       ),
     );

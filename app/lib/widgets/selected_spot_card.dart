@@ -1,3 +1,4 @@
+import 'package:app/providers/map_visible_region_places_provider.dart';
 import 'package:app/spot.dart';
 import 'package:app/string_extension.dart';
 import 'package:flutter/cupertino.dart';
@@ -5,10 +6,11 @@ import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:map_launcher/map_launcher.dart';
 import 'package:cached_network_image/cached_network_image.dart';
+import 'package:provider/provider.dart';
 
-class SpotCard extends StatelessWidget {
+class SelectedSpotCard extends StatelessWidget {
   final Spot spot;
-  const SpotCard({super.key, required this.spot});
+  const SelectedSpotCard({super.key, required this.spot});
 
   String americanizeDistance(double distanceInMeters) {
     const double meterToFootConversion = 3.28084;
@@ -83,38 +85,45 @@ class SpotCard extends StatelessWidget {
 
     return FutureBuilder(
       future: spot.fetchGooglePlaceDetails(),
-      builder: (BuildContext context, AsyncSnapshot<void> snapshot) =>
-          CupertinoButton(
-        padding: const EdgeInsets.all(16.0),
-        onPressed: openInMaps,
-        color: Colors.black26,
+      builder: (BuildContext context, AsyncSnapshot<void> snapshot) => Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 16),
         child: Align(
           alignment: Alignment.centerLeft,
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              if (spot.photoUrl != null)
-                CachedNetworkImage(
-                  imageUrl: spot.photoUrl!,
-                  height: 100,
-                  width: double.infinity,
-                  fit: BoxFit.cover,
-                  placeholder: (context, url) =>
-                      const CircularProgressIndicator(),
-                  errorWidget: (context, url, error) => const Icon(Icons.error),
-                )
-              else
-                const SizedBox(height: 100),
-
-              const SizedBox(height: 8.0),
-              // Spot name
-              Text(
-                spot.name,
-                style: const TextStyle(
-                  fontSize: 20.0,
-                  fontWeight: FontWeight.bold,
-                ),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                crossAxisAlignment: CrossAxisAlignment.center,
+                children: [
+                  Flexible(
+                    child: Padding(
+                      padding: const EdgeInsets.only(top: 8.0),
+                      child: Text(
+                        spot.name,
+                        style: const TextStyle(
+                          fontSize: 36,
+                          fontWeight: FontWeight.bold,
+                        ),
+                        overflow: TextOverflow.ellipsis,
+                        softWrap: true, // this will make text wrap to next line
+                      ),
+                    ),
+                  ),
+                  IconButton(
+                    icon: const Icon(
+                      CupertinoIcons.xmark_circle_fill,
+                      color: Colors.white,
+                    ),
+                    onPressed: () {
+                      context
+                          .read<MapVisibleRegionPlacesProvider>()
+                          .handleUnselectSpot();
+                    },
+                  ),
+                ],
               ),
+
               const SizedBox(height: 8.0),
 
               Text(
@@ -136,15 +145,16 @@ class SpotCard extends StatelessWidget {
                   ),
                 ),
               const SizedBox(height: 8.0),
-
-              // Distance
-              // Text(
-              //   americanizeDistance(spot.distance),
-              //   style: TextStyle(
-              //     fontSize: 16.0,
-              //     color: Colors.grey[700],
-              //   ),
-              // ),
+              if (spot.photoUrl != null)
+                CachedNetworkImage(
+                  imageUrl: spot.photoUrl!,
+                  height: 100,
+                  width: double.infinity,
+                  fit: BoxFit.cover,
+                  placeholder: (context, url) =>
+                      const CircularProgressIndicator(),
+                  errorWidget: (context, url, error) => const Icon(Icons.error),
+                )
             ],
           ),
         ),

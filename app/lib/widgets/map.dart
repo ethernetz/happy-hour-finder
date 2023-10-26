@@ -123,7 +123,7 @@ class MapState extends State<Map> {
                         maxLines: 2, // Maximum of 2 lines
                         overflow:
                             TextOverflow.ellipsis, // Ellipsis for overflow
-                        style: TextStyle(
+                        style: const TextStyle(
                           fontSize: 12,
                           color: Colors.white,
                         ),
@@ -138,7 +138,6 @@ class MapState extends State<Map> {
                     ],
                   ),
                 );
-
               }).toList(),
               builder: (context, markers) {
                 return Container(
